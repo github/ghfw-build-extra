@@ -1,4 +1,4 @@
-# Maintainer: Johannes Schindelin <johannes.schindelin@gmx.de>
+# Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('github-extra')
 pkgver=1.0.0
