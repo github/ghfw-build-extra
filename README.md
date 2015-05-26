@@ -6,7 +6,7 @@ The easiest way to install Git for Windows SDK is via the [Git SDK installer](ht
 
 # Git Shell
 
-This is a tailored environment which is used as Git Shell in GitHub for Windows. Don't try and install these releases by hand - either grab the [vanilla Git for Windows releases](https://github.com/git-for-windows/git/releases) or install [GitHub for Windows](http://windows.github.com/).
+This is a tailored build environment for creating the Git Shell tools in GitHub for Windows. Don't try and install these releases by hand - either grab one of the [vanilla Git for Windows releases](https://github.com/git-for-windows/git/releases) or install [GitHub for Windows](http://windows.github.com/).
 
 ## Creating a Release
 
