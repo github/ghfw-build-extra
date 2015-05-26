@@ -24,4 +24,4 @@ gitversion=$(git --version | egrep -o '[0-9]*.[0-9]*.[0-9]*.windows.[0-9]*')
 version="${gitversion/windows./}"
 
 # run the portable installer
-$SCRIPT_PATH/portable/release.sh $version git-tfs github-extra
+$SCRIPT_PATH/git-shell/release.sh $version git-tfs github-extra
