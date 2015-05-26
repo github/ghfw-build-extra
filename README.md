@@ -4,13 +4,26 @@ This is Git for Windows SDK, the build environment for [Git for Windows](http://
 
 The easiest way to install Git for Windows SDK is via the [Git SDK installer](https://github.com/git-for-windows/build-extra/releases/latest). This installer will clone our [repositories](http://github.com/git-for-windows/), including all the necessary components to build Git for Windows, and perform an initial build. It will also install a shortcut to the Git SDK Bash on the desktop.
 
-To check out the `build-extra` project in the Git SDK, issue the following commands in the Git SDK Bash:
+# Git Shell
 
-```sh
-cd /usr/src/build-extra
-git fetch
-git checkout master
-```
+This is a tailored environment which is used as Git Shell in GitHub for Windows. Don't try and install these releases by hand - either grab the [vanilla Git for Windows releases](https://github.com/git-for-windows/git/releases) or install [GitHub for Windows](http://windows.github.com/).
+
+## Creating a Release
+
+You need to have the 32-bit Git SDK installed on your machine. Grab it from [here](https://github.com/git-for-windows/build-extra/releases).
+
+Once you've installed that (it'll take a while to download and bootstrap the environment), this is all you need to run:
+
+> git clone https://github.com/github/ghfw-build-extra.git
+> cd ghfw-build-extra
+> ./release-ghfw.sh
+
+We add a couple of things to the default Git for Windows SDK:
+
+ - `git-tfs` - support for `git tfs` in the box
+ - `github-extra` - configuration customizations
+
+
 
 # Components of the Git for Windows SDK
 
