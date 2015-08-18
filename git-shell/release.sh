@@ -52,6 +52,9 @@ LIST="$(ARCH=$ARCH BITNESS=$BITNESS \
 	sh "$SCRIPT_PATH"/../make-file-list.sh "$@")" ||
 die "Could not generate file list"
 
+# fingerprint the tip so we can version this installer correctly
+git rev-parse HEAD | tr -d '\n' > "$SCRIPT_PATH/root/VERSION"
+
 # 7-Zip will strip absolute paths completely... therefore, we can add another
 # root directory like this:
 
