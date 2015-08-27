@@ -1,0 +1,34 @@
+# Maintainer: Johannes Schindelin <johannes.schindelin@gmx.de>
+
+pkgname=('git-tfs')
+pkgver=0.21.0
+pkgrel=1
+pkgdesc="A Git/TFS bridge"
+arch=('i686' 'x86_64')
+url="https://github.com/git-tfs/git-tfs"
+license=('Apache 2.0')
+depends=('git-extra')
+
+source=("https://github.com/git-tfs/git-tfs/releases/download/v$pkgver/GitTfs-v$pkgver.zip")
+
+md5sums=('4468af4b8a4318c2dcbba2cea617cfa1')
+
+package() {
+  install -d -m755 $pkgdir/usr/bin
+  install -m755 git-tfs.exe $pkgdir/usr/bin/git-tfs.exe
+
+  install -d -m755 $pkgdir/usr/share/git-tfs
+  install -m644 NOTICE $pkgdir/usr/share/git-tfs/NOTICE
+  install -m644 LICENSE $pkgdir/usr/share/git-tfs/LICENSE
+  install -m644 README.md $pkgdir/usr/share/git-tfs/README.md
+  install -m644 *.dll $pkgdir/usr/share/git-tfs/
+  install -m644 *.exe $pkgdir/usr/share/git-tfs/
+  install -m644 *.exe.config $pkgdir/usr/share/git-tfs/
+  
+  install -d -m755 $pkgdir/usr/share/git-tfs/NativeBinaries
+  install -d -m755 $pkgdir/usr/share/git-tfs/NativeBinaries/amd64
+  install -m755 NativeBinaries/amd64/*.dll $pkgdir/usr/share/git-tfs/NativeBinaries/amd64/
+  install -d -m755 $pkgdir/usr/share/git-tfs/NativeBinaries/x86
+  install -m755 NativeBinaries/x86/*.dll $pkgdir/usr/share/git-tfs/NativeBinaries/x86/
+}
+

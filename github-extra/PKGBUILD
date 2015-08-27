@@ -1,0 +1,19 @@
+# Maintainer: Brendan Forster <brendan@github.com>
+
+pkgname=('github-extra')
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Environment customizations for Git Shell"
+arch=('i686' 'x86_64')
+url="https://github.com/github/msysgit"
+license=('Apache 2.0')
+depends=('git-extra')
+
+package() {
+  install -d -m755 $pkgdir/etc
+  install -m755 $srcdir/gitattributes $pkgdir/etc/gitattributes
+  install -m755 $srcdir/gitattributes.suggested $pkgdir/etc/gitattributes.suggested
+  install -m755 $srcdir/gitconfig $pkgdir/etc/gitconfig
+  install -m755 $srcdir/gitignore.suggested $pkgdir/etc/gitignore.suggested
+}
+
