@@ -2,7 +2,7 @@
 
 pkgname=('git-tfs')
 pkgver=0.21.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A Git/TFS bridge"
 arch=('i686' 'x86_64')
 url="https://github.com/git-tfs/git-tfs"
@@ -15,7 +15,6 @@ md5sums=('4468af4b8a4318c2dcbba2cea617cfa1')
 
 package() {
   install -d -m755 $pkgdir/usr/bin
-  install -m755 git-tfs.exe $pkgdir/usr/bin/git-tfs.exe
 
   install -d -m755 $pkgdir/usr/share/git-tfs
   install -m644 NOTICE $pkgdir/usr/share/git-tfs/NOTICE
