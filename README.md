@@ -16,14 +16,13 @@ Once you've installed that (it'll take a while to download and bootstrap the env
 
 > git clone https://github.com/github/ghfw-build-extra.git
 > cd ghfw-build-extra
-> ./release-ghfw.sh
+> ./update-git-shell.sh
+> ./package-git-shell.sh
 
 We add a couple of things to the default Git for Windows SDK:
 
  - `git-tfs` - support for `git tfs` in the box
  - `github-extra` - configuration customizations
-
-
 
 # Components of the Git for Windows SDK
 
