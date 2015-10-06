@@ -25,6 +25,21 @@ post_install () {
 [rebase]
 	autosquash = true
 GITCONFIG
+		test ! -d /$dir ||
+		test -f /$dir/etc/gitattributes ||
+		cat > /$dir/etc/gitattributes <<\GITATTRIBUTES
+*.doc	diff=astextplain
+*.DOC	diff=astextplain
+*.docx	diff=astextplain
+*.DOCX	diff=astextplain
+*.dot	diff=astextplain
+*.DOT	diff=astextplain
+*.pdf	diff=astextplain
+*.PDF	diff=astextplain
+*.rtf	diff=astextplain
+*.RTF	diff=astextplain
+
+GITATTRIBUTES
 	done
 
 	grep -q '^db_home: env windows' /etc/nsswitch.conf ||
@@ -39,8 +54,15 @@ GITCONFIG
 	sed -i 's/^\(db_gecos: \)\(env \)\?\([^e]\)/\1env # \3/' \
 		/etc/nsswitch.conf
 
+	! grep -q '^group: [^#]*db' /etc/nsswitch.conf ||
+	sed -i 's/^\(group: \)\(.* \)\?\(db\)/\1\2# \3/' \
+		/etc/nsswitch.conf
+
 	! grep -q '^PS1=' /etc/bash.bashrc ||
 	sed -i 's/^PS1=/#&/' /etc/bash.bashrc
+
+	grep -q '^# Fixup git-bash in non login env' /etc/bash.bashrc ||
+	printf "\n# Fixup git-bash in non login env\nshopt -q login_shell || . /etc/profile.d/git-prompt.sh\n" >> /etc/bash.bashrc
 
 	grep -q git-for-windows etc/pacman.conf ||
 	sed -i -e '/^\[mingw32\]/i[git-for-windows]\nServer = https://dl.bintray.com/$repo/pacman/$arch\nSigLevel = Optional\n' etc/pacman.conf
@@ -61,6 +83,10 @@ none /tmp usertemp binary,posix=0,noacl 0 0' /etc/fstab
 
 	! grep -q '^export TERM=' /etc/profile ||
 	sed -i 's/^export TERM=/test -n "$TERM" || &/' /etc/profile
+
+	! grep -q ' $1 == ~\* ' /usr/share/bash-completion/bash_completion ||
+	sed -i 's/\( \$1 == \|printf -v \$2 \)\(~\* \|~%q \)/\1\\\2/' \
+		/usr/share/bash-completion/bash_completion
 
 	! grep -qi '^TMP=' /etc/profile ||
 	sed -i 's/^TE\?MP=/#&/i' /etc/profile

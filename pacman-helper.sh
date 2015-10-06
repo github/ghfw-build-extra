@@ -1,23 +1,35 @@
 #!/bin/sh
 
 # This script helps Git for Windows developers to manage their Pacman
-# repository.
+# repository and their local pacman package-database.
 #
 # A Pacman repository is like a Git repository, but for binary packages.
 #
-# This script supports three commands:
+# This script supports seven commands:
 #
 # - 'fetch' to initialize (or update) a local mirror of the Pacman repository
 #
 # - 'add' to add packages to the local mirror
 #
+# - 'remove' to make the next 'push' skip the given package(s)
+#
 # - 'push' to synchronize local changes (after calling `repo-add`) to the
 #   remote Pacman repository
+#
+# - 'files' shows files that are not owned by any package.
+#
+# - 'dirs' shows directories that are not owned by any package.
+#
+# - 'orphans' removes any package that became an orphan.
 
 die () {
-	echo "$*" >&2
+	printf "$*" >&2
 	exit 1
 }
+
+# temporary fifo files
+fifo_find="/var/tmp/disowned.find"
+fifo_pacman="/var/tmp/disowned.pacman"
 
 # MSys2's mingw-w64-$arch-ca-certificates seem to lag behind ca-certificates
 CURL_CA_BUNDLE=/usr/ssl/certs/ca-bundle.crt
@@ -25,12 +37,14 @@ export CURL_CA_BUNDLE
 
 mode=
 case "$1" in
-fetch|add|push)
+fetch|add|remove|push|files|dirs|orphans)
 	mode="$1"
 	shift
 	;;
 *)
-	die "Usage: $0 ( fetch | push | add <package>... )"
+	die "Usage:\n" \
+		" $0 ( fetch | push | ( add | remove ) <package>... )\n" \
+		" $0 ( files | dirs | orphans )"
 	;;
 esac
 
@@ -174,13 +188,27 @@ add () { # <file>
 	done
 }
 
+remove () { # <package>...
+	test $# -gt 0 ||
+	die "What packages do you want to add?"
+
+	for package
+	do
+		for arch in $architectures
+		do
+			(cd "$(arch_dir $arch)" &&
+			 rm $package-*.pkg.tar.xz &&
+			 repo-remove git-for-windows.db.tar.xz $package)
+		done
+	done
+}
+
+
 update_local_package_databases () {
 	for arch in $architectures
 	do
 		(cd "$(arch_dir $arch)" &&
-		 repo-add --new git-for-windows.db.tar.xz \
-			*.pkg.tar.xz
-		)
+		 repo-add --new git-for-windows.db.tar.xz *.pkg.tar.xz)
 	done
 }
 
@@ -215,53 +243,55 @@ push () {
 	to_upload="$(printf "%s\n%s\n%s\n" "$old_list" "$old_list" "$new_list" |
 		sort | uniq -u)"
 
-	test -n "$to_upload" || {
+	test -n "$to_upload" || test "x$old_list" != "x$new_list" || {
 		echo "Nothing to be done" >&2
 		return
 	}
 
-	to_upload_basenames="$(echo "$to_upload" |
-		sed 's/-[0-9].*//' |
-		sort | uniq)"
-
 	db_version="$(db_version)"
 	next_db_version="$(next_db_version "$db_version")"
 
-	# Verify that the packages exist already
-	for basename in $to_upload_basenames
-	do
-		case " $(echo "$old_list" | tr '\n' ' ')" in
-		*" $basename"-[0-9]*)
-			;;
-		*)
-			package_exists $basename ||
-			die "The package $basename does not yet exist... Add it at https://bintray.com/git-for-windows/pacman/new/package?pkgPath="
-			;;
-		esac
-	done
+	test -z "$to_upload" || {
+		to_upload_basenames="$(echo "$to_upload" |
+			sed 's/-[0-9].*//' |
+			sort | uniq)"
 
-	for name in $to_upload
-	do
-		basename=${name%%-[0-9]*}
-		version=${name#$basename-}
-		for arch in $architectures
+		# Verify that the packages exist already
+		for basename in $to_upload_basenames
 		do
-			case "$name" in
-			mingw-w64-*)
-				filename=$name-any.pkg.tar.xz
+			case " $(echo "$old_list" | tr '\n' ' ')" in
+			*" $basename"-[0-9]*)
 				;;
 			*)
-				filename=$name-$arch.pkg.tar.xz
+				package_exists $basename ||
+				die "The package $basename does not yet exist... Add it at https://bintray.com/git-for-windows/pacman/new/package?pkgPath="
 				;;
 			esac
-			(cd "$(arch_dir $arch)" &&
-			 if test -f $filename
-			 then
-				upload $basename $version $arch $filename
-			 fi) || exit
 		done
-		publish $basename $version
-	done
+
+		for name in $to_upload
+		do
+			basename=${name%%-[0-9]*}
+			version=${name#$basename-}
+			for arch in $architectures
+			do
+				case "$name" in
+				mingw-w64-*)
+					filename=$name-any.pkg.tar.xz
+					;;
+				*)
+					filename=$name-$arch.pkg.tar.xz
+					;;
+				esac
+				(cd "$(arch_dir $arch)" &&
+				 if test -f $filename
+				 then
+					upload $basename $version $arch $filename
+				 fi) || exit
+			done
+			publish $basename $version
+		done
+	}
 
 	delete_version package-database "$db_version"
 
@@ -277,6 +307,47 @@ push () {
 		) || exit
 	done
 	publish package-database $next_db_version
+}
+
+reset_fifo_files () {
+	rm -f "$fifo_find"
+	rm -f "$fifo_pacman"
+}
+
+dirs () {
+	reset_fifo_files
+
+	find / \( -path '/dev' -o -path '/bin' -o -path '/usr/src' \
+		-o -path '/tmp' -o -path '/proc' -o -path '/home' \
+		-o -path '/var/lib/pacman' -o -path '/var/cache/pacman' \) \
+		-prune -o -type d -print | sed 's/\([^/]\)$/\1\//' | \
+		sort -u > "$fifo_find"
+
+	pacman -Qlq | sort -u > "$fifo_pacman"
+
+	comm -23 "$fifo_find" "$fifo_pacman"
+
+	reset_fifo_files
+}
+
+files () {
+	reset_fifo_files
+
+	find / \( -path '/dev' -o -path '/bin' -o -path '/usr/src' \
+		-o -path '/tmp' -o -path '/proc' -o -path "$fifo_find" \
+		-o -path '/home' -o -path '/var/lib/pacman' \
+		-o -path '/var/cache/pacman' \) -prune -o -type f -print | \
+		sort -u > "$fifo_find"
+
+	pacman -Qlq | sort -u > "$fifo_pacman"
+
+	comm -23 "$fifo_find" "$fifo_pacman"
+
+	reset_fifo_files
+}
+
+orphans () {
+	pacman -Rns $(pacman -Qtdq) 2> /dev/null || echo 'no orphans found..'
 }
 
 eval "$mode" "$@"

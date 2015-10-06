@@ -14,7 +14,8 @@ pacman_list () {
 		do
 			pactree -u "$arg"
 		done |
-		grep -v -e '^db$' -e '^info$' -e '^heimdal$' |
+		grep -v -e '^db$' -e '^info$' -e '^heimdal$' \
+			-e '^git$' -e '^util-linux$' |
 		sort |
 		uniq) &&
 	if test -n "$PACKAGE_VERSIONS_FILE"
@@ -27,14 +28,22 @@ pacman_list () {
 }
 
 # Packages that have been added after Git SDK 1.0.0 was released...
-pacman -S --needed --noconfirm mingw-w64-$ARCH-connect >&2 ||
-die "Could not install required packages"
+required=
+for req in mingw-w64-$ARCH-connect git-flow unzip docx2txt \
+	mingw-w64-$ARCH-antiword mingw-w64-$ARCH-xpdf
+do
+	test -d /var/lib/pacman/local/$req-[0-9]* ||
+	required="$required $req"
+done
+test -z "$required" ||
+pacman -S --noconfirm $required >&2 ||
+die "Could not install required packages: $required"
 
 pacman_list mingw-w64-$ARCH-git mingw-w64-$ARCH-git-doc-html \
 	git-extra ncurses mintty vim openssh winpty \
-	sed awk less grep gnupg tar findutils coreutils diffutils \
+	sed awk less grep gnupg tar findutils coreutils diffutils patch \
 	dos2unix which subversion mingw-w64-$ARCH-tk \
-	mingw-w64-$ARCH-connect "$@" |
+	mingw-w64-$ARCH-connect git-flow docx2txt mingw-w64-$ARCH-antiword "$@" |
 grep -v -e '\.[acho]$' -e '\.l[ao]$' -e '/aclocal/' \
 	-e '/man/' -e '/pkgconfig/' -e '/emacs/' \
 	-e '^/usr/lib/python' -e '^/usr/lib/ruby' \
@@ -69,6 +78,10 @@ grep -v -e '\.[acho]$' -e '\.l[ao]$' -e '/aclocal/' \
 grep --perl-regexp -v -e '^/usr/(lib|share)/terminfo/(?!.*/(cygwin|dumb|xterm.*)$)' |
 sed 's/^\///'
 
+test -z "$PACKAGE_VERSIONS_FILE" ||
+pacman -Q filesystem dash rebase util-linux unzip \
+	mingw-w64-$ARCH-xpdf >>"$PACKAGE_VERSIONS_FILE"
+
 cat <<EOF
 etc/profile
 etc/profile.d/lang.sh
@@ -84,4 +97,8 @@ usr/bin/start
 usr/bin/dash.exe
 usr/bin/rebase.exe
 usr/bin/rebaseall
+usr/bin/getopt.exe
+mingw$BITNESS/etc/gitattributes
+mingw$BITNESS/bin/pdftotext.exe
+mingw$BITNESS/bin/libstdc++-6.dll
 EOF
