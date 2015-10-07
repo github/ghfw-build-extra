@@ -1,4 +1,4 @@
-# Maintainer: Johannes Schindelin <johannes.schindelin@gmx.de>
+# Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('git-tfs')
 pkgver=0.21.0
