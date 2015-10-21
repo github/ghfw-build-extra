@@ -13,7 +13,7 @@ file 5.24-1
 filesystem 2015.04-3
 flex 2.5.39-4
 gawk 4.1.3-1
-git 2.6.0-1
+git 2.6.2-1
 git-extra 1.1.94.589bdab-1
 git-flow 1.8.0.61.g2b013fc-1
 git-tfs 0.21.0-2
@@ -28,7 +28,7 @@ mingw-w64-i686-antiword 0.37-2
 mingw-w64-i686-binutils 2.25.1-1
 mingw-w64-i686-connect 1.104-1
 mingw-w64-i686-crt-git 5.0.0.4573.628fdbf-1
-mingw-w64-i686-curl 7.44.0-3
+mingw-w64-i686-curl 7.45.0-1
 mingw-w64-i686-expat 2.1.0-6
 mingw-w64-i686-gcc 5.2.0-4
 mingw-w64-i686-gcc-ada 5.2.0-4
@@ -37,9 +37,9 @@ mingw-w64-i686-gcc-libgfortran 5.2.0-4
 mingw-w64-i686-gcc-libs 5.2.0-4
 mingw-w64-i686-gcc-objc 5.2.0-4
 mingw-w64-i686-gdb 7.10-1
-mingw-w64-i686-git 2.6.1.1.e3395e6-1
-mingw-w64-i686-git-doc-html 2.6.1.1.e3395e6-1
-mingw-w64-i686-headers-git 5.0.0.4575.ada0f35-1
+mingw-w64-i686-git 2.6.2.1.104a5fe-1
+mingw-w64-i686-git-doc-html 2.6.2.1.104a5fe-1
+mingw-w64-i686-headers-git 5.0.0.4578.ace70f1-1
 mingw-w64-i686-libmangle-git 5.0.0.4509.2e5a9a2-1
 mingw-w64-i686-libwinpthread-git 5.0.0.4573.628fdbf-1
 mingw-w64-i686-make 4.1.2351.a80a8b8-1
@@ -54,7 +54,7 @@ mintty 1~2.0.3-2
 msys2-runtime 2.2.1.33619.e87aaa7-1
 openssh 7.1p1-1
 p7zip 9.38.1-1
-pacman 4.2.1.6198.439d376-1
+pacman 4.2.1.6230.6ff894e-1
 patch 2.7.5-1
 pax-git 20140703.2.1.g469552a-1
 perl 5.22.0-2
@@ -76,5 +76,5 @@ tzcode 2015.e-1
 unzip 6.0-2
 util-linux 2.26.2-1
 vim 7.4.872-2
-winpty-git 1.1.1.184.db12b07-1
+winpty-git 1.1.1.218.3b73576-1
 xmlto 0.0.26-2
