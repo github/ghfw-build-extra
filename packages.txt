@@ -37,7 +37,7 @@ mingw-w64-i686-gcc-libgfortran 5.2.0-4
 mingw-w64-i686-gcc-libs 5.2.0-4
 mingw-w64-i686-gcc-objc 5.2.0-4
 mingw-w64-i686-gdb 7.10-1
-mingw-w64-i686-git 2.6.2.1.104a5fe-1
+mingw-w64-i686-git 2.5.3.1.6ee1c9b-1
 mingw-w64-i686-git-doc-html 2.6.2.1.104a5fe-1
 mingw-w64-i686-headers-git 5.0.0.4578.ace70f1-1
 mingw-w64-i686-libmangle-git 5.0.0.4509.2e5a9a2-1
