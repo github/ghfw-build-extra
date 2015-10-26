@@ -1,6 +1,3 @@
-# update any/all upstream packages
-pacman -Syu --noconfirm 
-
 # add git-tfs to the environment
 echo "installing git-tfs pre-requisite..."
 pushd git-tfs > /dev/null
