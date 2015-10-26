@@ -32,7 +32,7 @@
 	format = html
 
 [http]
-	sslcainfo = /usr/ssl/certs/ca-bundle-ghfw.crt
+	sslcainfo = /usr/ssl/certs/ca-bundle.crt
 
 [diff "astextplain"]
 	textconv = astextplain
