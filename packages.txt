@@ -17,7 +17,7 @@ git 2.6.2-1
 git-extra 1.1.94.589bdab-1
 git-flow 1.8.0.61.g2b013fc-1
 git-tfs 0.21.0-2
-github-extra 1.0.1-1
+github-extra 1.0.6-1
 grep 2.21-1
 inetutils 1.9.2-1
 info 6.0-1
