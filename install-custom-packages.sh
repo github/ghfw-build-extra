@@ -11,5 +11,5 @@ echo "installing github-extra pre-requisite..."
 pushd github-extra > /dev/null
 makepkg-mingw -f
 githubExtraPackage=$(ls -t github-extra-* | head -n 1)
-pacman -U --force --noconfirm $githubExtraPackage
+pacman -U --noconfirm $githubExtraPackage
 popd
