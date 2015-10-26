@@ -15,3 +15,7 @@
 /portable/root/etc/
 /portable/root/post-install.bat
 /sdk-installer/root/
+
+# never accidentally commit these here
+PortableGit.7z
+packages.txt
