@@ -32,10 +32,7 @@
 	format = html
 
 [http]
-	sslcainfo = /bin/curl-ca-bundle-ghfw.crt
-
-[sendemail]
-	smtpserver = /bin/msmtp.exe
+	sslcainfo = /ming32/usr/ssl/ca-bundle-ghfw.crt
 
 [diff "astextplain"]
 	textconv = astextplain
