@@ -1,3 +1,11 @@
+export LC_ALL=C
+
+post_install () {
+	for dir in mingw32 mingw64
+	do
+		test ! -d /$dir ||
+		test -f /$dir/etc/gitconfig ||
+		cat > /$dir/etc/gitconfig <<\GITCONFIG
 [alias]
 	c = commit
 	co = checkout
@@ -32,10 +40,7 @@
 	format = html
 
 [http]
-	sslcainfo = /bin/curl-ca-bundle-ghfw.crt
-
-[sendemail]
-	smtpserver = /bin/msmtp.exe
+	sslcainfo = /ming32/usr/ssl/ca-bundle-ghfw.crt
 
 [diff "astextplain"]
 	textconv = astextplain
@@ -79,3 +84,29 @@
 [mergetool "p4"]
 	cmd = \"c:/program files/Perforce/p4merge.exe\" \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
 	trustExitCode = false
+GITCONFIG
+		test ! -d /$dir ||
+		test -f /$dir/etc/gitattributes ||
+		cat > /$dir/etc/gitattributes <<\GITATTRIBUTES
+# Custom for Visual Studio
+*.cs     diff=csharp
+
+# Standard to msysgit
+*.doc	 diff=astextplain
+*.DOC	 diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot  diff=astextplain
+*.DOT  diff=astextplain
+*.pdf  diff=astextplain
+*.PDF	 diff=astextplain
+*.rtf	 diff=astextplain
+*.RTF	 diff=astextplain
+
+GITATTRIBUTES
+	done
+}
+
+post_upgrade () {
+	post_install
+}
