@@ -1,10 +1,10 @@
 # Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('github-extra')
-pkgver=1.0.2
+pkgver=1.0.3
 pkgrel=1
 pkgdesc="Environment customizations for Git Shell"
-arch=('i686' 'x86_64')
+arch=('i686')
 url="https://github.com/github/ghfw-build-extra"
 license=('Apache 2.0')
 depends=('git-extra')
