@@ -46,6 +46,9 @@ die "Could not make etc/ directory"
 mkdir -p "$SCRIPT_PATH/root/tmp" ||
 die "Could not make tmp/ directory"
 
+cp $SCRIPT_PATH/../post-install.bat $SCRIPT_PATH/root/ ||
+die "Could not copy post-install script"
+
 # Make a list of files to include
 LIST="$(ARCH=$ARCH BITNESS=$BITNESS \
 	PACKAGE_VERSIONS_FILE="$SCRIPT_PATH"/root/etc/package-versions.txt \
