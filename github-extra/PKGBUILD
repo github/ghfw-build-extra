@@ -25,5 +25,6 @@ package() {
   install -d -m755 $pkgdir/${MINGW_PREFIX}/etc
   install -m755 $srcdir/gitattributes.suggested $pkgdir/${MINGW_PREFIX}/etc/gitattributes.suggested
   install -m755 $srcdir/gitignore.suggested $pkgdir/${MINGW_PREFIX}/etc/gitignore.suggested
+  install -m755 $srcdir/ssh_config $pkgdir/${MINGW_PREFIX}/etc/ssh_config
 }
 
