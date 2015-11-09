@@ -105,6 +105,19 @@ GITCONFIG
 
 GITATTRIBUTES
 	done
+
+	test -f /etc/ssh/ssh_config ||
+	cat > /etc/ssh/ssh_config <<\SSHCONFIG
+Host *
+	StrictHostKeyChecking no
+	UserKnownHostsFile=/dev/null
+
+Host github.com
+	StrictHostKeyChecking no
+	UserKnownHostsFile=/dev/null
+	IdentityFile=~/.ssh/github_rsa
+
+SSHCONFIG
 }
 
 post_upgrade () {

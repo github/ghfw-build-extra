@@ -1,7 +1,7 @@
 # Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('github-extra')
-pkgver=1.0.7
+pkgver=1.0.8
 pkgrel=1
 pkgdesc="Environment customizations for Git Shell"
 arch=('any')
@@ -13,11 +13,14 @@ depends=('git-extra')
 prepare() {
   test $startdir/$pkgname.install -nt $startdir/$pkgname.install.in &&
   test $startdir/$pkgname.install -nt $startdir/resources/gitconfig &&
-  test $startdir/$pkgname.install -nt $startdir/resources/gitattributes ||
+  test $startdir/$pkgname.install -nt $startdir/resources/gitattributes &&
+  test $startdir/$pkgname.install -nt $startdir/resources/ssh_config ||
   sed -e "/^@@GITCONFIG@@$/r $startdir/resources/gitconfig" \
 	-e "/^@@GITCONFIG@@$/d" \
 	-e "/^@@GITATTRIBUTES@@$/r $startdir/resources/gitattributes" \
 	-e "/^@@GITATTRIBUTES@@$/d" \
+	-e "/^@@SSHCONFIG@@$/r $startdir/resources/ssh_config" \
+	-e "/^@@SSHCONFIG@@$/d" \
 	<$startdir/$pkgname.install.in >$startdir/$pkgname.install
 }
 
@@ -25,6 +28,5 @@ package() {
   install -d -m755 $pkgdir/${MINGW_PREFIX}/etc
   install -m755 $srcdir/gitattributes.suggested $pkgdir/${MINGW_PREFIX}/etc/gitattributes.suggested
   install -m755 $srcdir/gitignore.suggested $pkgdir/${MINGW_PREFIX}/etc/gitignore.suggested
-  install -m755 $srcdir/ssh_config $pkgdir/${MINGW_PREFIX}/etc/ssh_config
 }
 

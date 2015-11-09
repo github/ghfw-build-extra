@@ -15,6 +15,12 @@ GITCONFIG
 
 GITATTRIBUTES
 	done
+
+	test -f /etc/ssh/ssh_config ||
+	cat > /etc/ssh/ssh_config <<\SSHCONFIG
+@@SSHCONFIG@@
+
+SSHCONFIG
 }
 
 post_upgrade () {
