@@ -1,7 +1,7 @@
 # Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('github-extra')
-pkgver=1.0.8
+pkgver=1.0.9
 pkgrel=1
 pkgdesc="Environment customizations for Git Shell"
 arch=('any')
@@ -28,5 +28,7 @@ package() {
   install -d -m755 $pkgdir/${MINGW_PREFIX}/etc
   install -m755 $srcdir/gitattributes.suggested $pkgdir/${MINGW_PREFIX}/etc/gitattributes.suggested
   install -m755 $srcdir/gitignore.suggested $pkgdir/${MINGW_PREFIX}/etc/gitignore.suggested
+  install -d -m755 $pkgdir/usr/bin
+  install -m755 $srcdir/ssh-noprompt $pkgdir/usr/bin/ssh-noprompt
 }
 
