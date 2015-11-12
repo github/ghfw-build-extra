@@ -1,0 +1,17 @@
+# Maintainer: Brendan Forster <brendan@github.com>
+
+pkgname=('gitpad')
+pkgver=1.4.0
+pkgrel=1
+pkgdesc="A shim for using your default editor for text files with Git"
+arch=('any')
+url="https://github.com/github/gitpad"
+license=('Apache 2.0')
+
+source=("https://github.com/github/gitpad/releases/download/v$pkgver/Gitpad.zip")
+md5sums=('dceca59747faadbad9d22b871b8567fc')
+
+package() {
+  install -d -m755 $pkgdir/usr/bin
+  install -m644 GitPad.exe $pkgdir/usr/bin/
+}
