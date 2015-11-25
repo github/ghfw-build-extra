@@ -3,6 +3,10 @@
 /git-extra/pkg/
 /git-extra/src/
 /git-extra/git-extra-*.pkg.tar.xz
+/git-shell/root/VERSION
+/git-shell/root/post-install.bat
+/git-shell/root/etc/
+
 /installer/ReleaseNotes.html
 /installer/bindimage.txt
 /installer/install.iss
