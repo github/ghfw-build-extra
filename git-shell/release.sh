@@ -71,5 +71,3 @@ die "Could not install 7-Zip"
 
 cd / && 7za a $OPTS7 $TARGET $LIST
 echo "Success! You will find the new installer at \"$TARGET\"."
-
-rm -rf $SCRIPT_PATH/root 
