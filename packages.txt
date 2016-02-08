@@ -27,7 +27,7 @@ markdown 1.0.1-1
 mingw-w64-i686-antiword 0.37-2
 mingw-w64-i686-binutils 2.25.1-1
 mingw-w64-i686-connect 1.104-1
-mingw-w64-i686-crt-git 5.0.0.4598.fc005cd-1
+mingw-w64-i686-crt-git 5.0.0.4609.566d621-1
 mingw-w64-i686-curl 7.46.0-2
 mingw-w64-i686-expat 2.1.0-6
 mingw-w64-i686-gcc 5.3.0-1
@@ -37,9 +37,9 @@ mingw-w64-i686-gcc-libgfortran 5.3.0-1
 mingw-w64-i686-gcc-libs 5.3.0-1
 mingw-w64-i686-gcc-objc 5.3.0-1
 mingw-w64-i686-gdb 7.10.1-1
-mingw-w64-i686-git 2.7.0.1.eb5624e-1
-mingw-w64-i686-git-doc-html 2.7.0.1.eb5624e-1
-mingw-w64-i686-headers-git 5.0.0.4598.fc005cd-1
+mingw-w64-i686-git 2.7.1.1.78567b9-1
+mingw-w64-i686-git-doc-html 2.7.1.1.78567b9-1
+mingw-w64-i686-headers-git 5.0.0.4609.566d621-1
 mingw-w64-i686-libmangle-git 5.0.0.4509.2e5a9a2-1
 mingw-w64-i686-libwinpthread-git 5.0.0.4573.628fdbf-1
 mingw-w64-i686-make 4.1.2351.a80a8b8-1
@@ -54,7 +54,7 @@ mintty 1~2.0.3-2
 msys2-runtime 2.3.1.33884.84870b7-1
 openssh 7.1p2-1
 p7zip 9.38.1-1
-pacman 4.2.1.6317.6ac7836-1
+pacman 5.0.0.6348.cc5a8f1-1
 patch 2.7.5-1
 pax-git 20140703.2.1.g469552a-1
 perl 5.22.0-2
