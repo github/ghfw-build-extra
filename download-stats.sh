@@ -18,14 +18,6 @@ test "--update" != "$1" || {
 }
 
 # IDs
-# v2.3.4.windows.2
-#id=${1:-1093748}
-# v2.3.5.windows.4
-#id=${1:-1130398}
-# v2.3.5.windows.6
-#id=${1:-1133929}
-# v2.3.5.windows.7
-#id=${1:-1147969}
 # v2.3.5.windows.8
 #id=${1:-1148462}
 # v2.3.6.windows.2
@@ -61,7 +53,48 @@ test "--update" != "$1" || {
 # v2.6.0.windows.1
 #id=${1:-1886219}
 # v2.6.1.windows.1
-id=${1:-1914287}
+#id=${1:-1914287}
+# v2.6.2.windows.1
+#id=${1:-1984920}
+# v2.6.3.windows.1
+#id=${1:-2104213}
+# v2.6.4.windows.1
+#id=${1:-2285622}
+# v2.7.0.windows.1
+#id=${1:-2375145}
+# v2.7.0.windows.2
+#id=${1:-2538484}
+# v2.7.1.windows.1
+#id=${1:-2566181}
+# v2.7.1.windows.2
+#id=${1:-2602217}
+# v2.7.2.windows.1
+#id=${1:-2671180}
+# v2.7.3.windows.1
+#id=${1:-2818116}
+# v2.7.4.windows.1
+#id=${1:-2838068}
+# v2.8.0.windows.1
+#id=${1:-2906101}
+# v2.8.1.windows.1
+id=${1:-2944817}
+
+case "$id" in
+*.*)
+	case "$id" in
+	v*.windows.*) id="$(echo "$id" | sed 's/\./\\./g')";;
+	*\(*\)) id="$(echo "$id" |
+		sed -e 's/(\(.*\))$/.windows.\1/' -e 's/\./\\./g')";;
+	*)
+		id="$(echo "$id" | sed 's/\./\\./g').windows.1";;
+	esac
+	id="$(sed -n "/$id/{N;s/.*:-\([0-9]*\).*/\1/p}" <"$0")"
+	test -n "$id" || {
+		echo "Version $1 not found" >&2
+		exit 1
+	}
+	;;
+esac
 
 curl -s https://api.github.com/repos/git-for-windows/git/releases/$id/assets |
 grep -e '"name":' -e '"download_count":'

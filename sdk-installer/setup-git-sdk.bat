@@ -10,17 +10,14 @@
 @REM set PATH
 @set PATH=%cwd%\usr\bin;%PATH%
 
-@REM set MSYSTEM so that MSys2 starts up in the correct mode
+@REM set MSYSTEM so that MSYS2 starts up in the correct mode
 @set MSYSTEM=MINGW@@BITNESS@@
 
-@REM need to rebase just to make sure that it still works even with 32-bit
-@REM Windows 10
+@REM need to rebase just to make sure that it still works even with Windows 10
 @SET initialrebase=false
-@IF MINGW32 == %MSYSTEM% @(
-	@FOR /F "tokens=4 delims=.[XP " %%i IN ('ver') DO @SET ver=%%i
-	@IF 10 LEQ %ver @(
-		@SET initialrebase=false
-	)
+@FOR /F "tokens=4 delims=.[XP " %%i IN ('ver') DO @SET ver=%%i
+@IF 10 LEQ %ver @(
+	@SET initialrebase=false
 )
 
 @IF %initialrebase% == true @(
@@ -47,7 +44,7 @@
 @REM Maybe we need a proxy?
 @IF %counter% GEQ 2 @(
 	@ECHO.
-	@ECHO There was a problem accessing the MSys2 repositories
+	@ECHO There was a problem accessing the MSYS2 repositories
 	@ECHO If your setup requires an HTTP proxy to access the web,
 	@ECHO please specify it here, otherwise leave it empty.
 	@ECHO.
@@ -67,13 +64,45 @@
 @REM pacman's post-install scripts run without complaining about heap problems
 @"%cwd%"\usr\bin\pacman -Sy --needed --force --noconfirm msys2-runtime
 
-@REM need to rebase just to make sure that it still works even with 32-bit
-@REM Windows 10
+@REM need to rebase just to make sure that it still works even with Windows 10
 @IF %initialrebase% == true @(
 	@"%cwd%"\bin\rebase.exe -b 0x63000000 "%cwd%"\usr\bin\msys-2.0.dll
 )
 
 @IF ERRORLEVEL 1 GOTO INSTALL_RUNTIME
+
+@SET /A counter=0
+:INSTALL_BASH
+@SET /A counter+=1
+@IF %counter% GEQ 5 @(
+	@ECHO Could not install bash
+	@PAUSE
+	@EXIT 1
+)
+
+@REM next, force update bash
+@"%cwd%"\usr\bin\pacman -S --needed --force --noconfirm bash
+
+@SET /A counter=0
+:INSTALL_INFO
+@SET /A counter+=1
+@IF %counter% GEQ 5 @(
+	@ECHO Could not install info
+	@PAUSE
+	@EXIT 1
+)
+
+@REM we need a /tmp directory, just for the time being
+@MKDIR "%cwd%"\tmp
+
+@REM next, initialize pacman's keyring
+@"%cwd%"\usr\bin\bash.exe -l -c '/usr/bin/bash /usr/bin/pacman-key --init'
+@IF ERRORLEVEL 1 PAUSE
+
+@REM next, force update info
+@"%cwd%"\usr\bin\pacman -S --needed --force --noconfirm info
+
+@IF ERRORLEVEL 1 GOTO INSTALL_INFO
 
 @SET /A counter=0
 :INSTALL_PACMAN
@@ -84,8 +113,8 @@
 	@EXIT 1
 )
 
-@REM next, force update pacman, but first we need bash and info for that.
-@"%cwd%"\usr\bin\pacman -S --needed --force --noconfirm bash info pacman
+@REM next, force update pacman
+@"%cwd%"\usr\bin\pacman -S --needed --force --noconfirm pacman
 
 @IF ERRORLEVEL 1 GOTO INSTALL_PACMAN
 
@@ -130,7 +159,7 @@
 )
 
 @REM Before running a shell, let's prevent complaints about "permission denied"
-@REM from MSys2's /etc/post-install/01-devices.post
+@REM from MSYS2's /etc/post-install/01-devices.post
 @MKDIR "%cwd%"\dev\shm 2> NUL
 @MKDIR "%cwd%"\dev\mqueue 2> NUL
 
