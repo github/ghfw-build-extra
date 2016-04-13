@@ -1,10 +1,10 @@
 # Maintainer: Brendan Forster <brendan@github.com>
 
 pkgname=('github-extra')
-pkgver=1.0.9
+pkgver=1.0.10
 pkgrel=1
 pkgdesc="Environment customizations for Git Shell"
-arch=('any')
+arch=('i686')
 url="https://github.com/github/ghfw-build-extra"
 license=('Apache 2.0')
 install='github-extra.install'
@@ -24,11 +24,27 @@ prepare() {
 	<$startdir/$pkgname.install.in >$startdir/$pkgname.install
 }
 
+hardlink_all_dlls () {
+	exec_path="/mingw32/libexec/git-core"
+	prefix_path="/mingw32/"
+
+    install -d -m755 $pkgdir/$prefix_path/libexec
+    install -d -m755 $pkgdir/$prefix_path/libexec/git-core
+	
+	for dll in "$prefix_path"bin/*.dll
+	do
+		filename=$(basename $dll)
+		destination="$pkgdir$exec_path/$filename"
+		install -m755 "$dll" "$destination"
+	done
+}
+
 package() {
   install -d -m755 $pkgdir/${MINGW_PREFIX}/etc
   install -m755 $srcdir/gitattributes.suggested $pkgdir/${MINGW_PREFIX}/etc/gitattributes.suggested
   install -m755 $srcdir/gitignore.suggested $pkgdir/${MINGW_PREFIX}/etc/gitignore.suggested
   install -d -m755 $pkgdir/usr/bin
   install -m755 $srcdir/ssh-noprompt $pkgdir/usr/bin/ssh-noprompt
+  hardlink_all_dlls
 }
 

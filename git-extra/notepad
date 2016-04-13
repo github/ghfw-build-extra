@@ -5,6 +5,11 @@ die () {
 	exit 1
 }
 
+case "$1" in
+*/.git/*) ;; # needs LF line endings
+*) exec notepad.exe "$1" || die "Could not launch notepad.exe";;
+esac
+
 test $# = 1 ||
 die "Usage: $0 <file>"
 
@@ -16,11 +21,9 @@ notepad.exe "$1" &&
 dos2unix.exe "$1" &&
 case "$1" in
 */COMMIT_EDITMSG|*\\COMMIT_EDITMSG)
-	columns="$(git config format.commitmessagecolumns)" &&
-	if test -z "$columns"
-	then
+	! columns="$(git config format.commitmessagecolumns)" || {
 		msg="$(fmt.exe -s -w "$columns" "$1")" &&
 		printf "%s" "$msg" >"$1"
-	fi
+	}
 	;;
 esac

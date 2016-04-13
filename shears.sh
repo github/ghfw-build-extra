@@ -349,6 +349,7 @@ EOF
 		then
 			branch_name="$(merge2branch_name "$merged_by")"
 			test -z "$branch_name" ||
+			test "$tip" != "$(name_commit "$tip")" ||
 			commit_name_map="$(printf '%s\n%s' \
 				"$tip $branch_name" "$commit_name_map")"
 		fi
@@ -365,6 +366,7 @@ EOF
 				printf " -e '%s'" \
 					"$(string2regex "$branch_name")"
 			done)"
+		test -z "$exprs" ||
 		commit_name_map="$(printf '%s' "$commit_name_map" |
 			eval grep -v $exprs)"
 	fi

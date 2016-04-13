@@ -1,5 +1,5 @@
-# Git 2.6.1 Release Notes
-Latest update: 5 October 2015
+# Git for Windows v2.8.1 Release Notes
+Latest update: April 4th 2016
 
 ## Introduction
 
@@ -10,7 +10,7 @@ See [http://git-scm.com/](http://git-scm.com/) for further details about Git inc
 # Known issues
 * Special permissions (and Windows Vista or later) are required when cloning repositories with symbolic links, therefore support for symbolic links is disabled by default. Use `git clone -c core.symlinks=true <URL>` to enable it, see details [here](https://github.com/git-for-windows/git/wiki/Symbolic-Links).
 * If configured to use Plink, you will have to connect with [putty](http://www.chiark.greenend.org.uk/~sgtatham/putty/) first and accept the host key.
-* Some console programs interact correctly with MinTTY only when called through `winpty` (e.g. the Python console needs to be started as `winpty python` instead of just `python`).
+* Some console programs, most notably non-MSYS2 Python, PHP, Node and OpenSSL, interact correctly with MinTTY only when called through `winpty` (e.g. the Python console needs to be started as `winpty python` instead of just `python`).
 * [cURL](http://curl.haxx.se) uses `$HOME/_netrc` instead of `$HOME/.netrc`.
 * If you specify command-line options starting with a slash, POSIX-to-Windows path conversion will kick in converting e.g. "`/usr/bin/bash.exe`" to "`C:\Program Files\Git\usr\bin\bash.exe`". When that is not desired -- e.g. "`--upload-pack=/opt/git/bin/git-upload-pack`" or "`-L/regex/`" -- you need to set the environment variable `MSYS_NO_PATHCONV` temporarily, like so:
 
@@ -30,7 +30,173 @@ Git is licensed under the GNU Public License version 2.
 
 Git for Windows also contains Embedded CAcert Root Certificates. For more information please go to [https://www.cacert.org/policy/RootDistributionLicense.php](https://www.cacert.org/policy/RootDistributionLicense.php).
 
-This package contains software from a number of other projects including Bash, zlib, curl, msmtp, tcl/tk, perl, MSys2 and a number of libraries and utilities from the GNU project, licensed under the GNU Public License. Likewise, it contains Perl which is dual licensed under the GNU Public License and the Artistic License.
+This package contains software from a number of other projects including Bash, zlib, curl, msmtp, tcl/tk, perl, MSYS2 and a number of libraries and utilities from the GNU project, licensed under the GNU Public License. Likewise, it contains Perl which is dual licensed under the GNU Public License and the Artistic License.
+
+## Changes since Git for Windows v2.8.1 (April 4th 2016)
+
+### Bug Fixes
+
+* FSCache [is now enabled by default](https://github.com/git-for-windows/build-extra/commit/a1ae146) even when upgrading from previous Git for Windows versions.
+* We now add `git.exe` to the `PATH` [by default](https://github.com/git-for-windows/build-extra/commit/1e2e00e) even when upgrading from previous Git for Windows versions.
+
+## Changes since Git for Windows v2.8.0 (March 29th 2016)
+
+### New Features
+
+* Comes with [Git v2.8.1](http://article.gmane.org/gmane.linux.kernel/2189878).
+* The Git for Windows project updated its contributor guidelines to the [Contributor Covenant 1.4](https://github.com/git-for-windows/git/pull/661).
+
+### Bug Fixes
+
+* Git's default editor (`vim`) is [no longer freezing](https://github.com/git-for-windows/msys2-runtime/commit/1ca92fa2ef89bf9d61d3911a499d8187db18427a) in CMD windows.
+* GIT_SSH (and other executable paths that Git wants to spawn) [can now contain spaces](https://github.com/git-for-windows/git/issues/692).
+
+## Changes since Git for Windows v2.7.4 (March 18th 2016)
+
+### New Features
+
+* Comes with [Git v2.8.0](http://article.gmane.org/gmane.linux.kernel/2185094).
+* Comes with the [Git Credential Manager v1.2.2](https://github.com/Microsoft/Git-Credential-Manager-for-Windows/releases/tag/v1.2.2).
+* The FSCache feature (which was labeled experimental for quite some time) [is now enabled by default](https://github.com/git-for-windows/build-extra/pull/101).
+* Git is now [added to the `PATH` by default](https://github.com/git-for-windows/build-extra/pull/102) (previously, the default was for Git to be available only from Git Bash/CMD).
+* The installer [now offers to launch the Git Bash right away](https://github.com/git-for-windows/build-extra/pull/103).
+
+### Bug Fixes
+
+* The previous workaround for the blurred link to the Git Credential Manager [was fixed](https://github.com/git-for-windows/build-extra/commit/58d978cb84096bcc887170cbfcf44af022848ae3) so that the link is neither blurry nor overlapping.
+* The installer [now changes the label of the `Next` button to `Install`](https://github.com/git-for-windows/build-extra/pull/104) on the last wizard page before installing.
+
+## Changes since Git for Windows v2.7.3 (March 15th 2016)
+
+### New Features
+
+* Comes with [Git 2.7.4](http://article.gmane.org/gmane.linux.kernel/2179363).
+
+### Bug Fixes
+
+* The Git Credential Manager hyperlink in the installer [is no longer blurred](https://github.com/git-for-windows/build-extra/commit/28bb2a330323ba1c69f278cafa81e3e4fd3bf71c).
+
+## Changes since Git for Windows v2.7.2 (February 23rd 2016)
+
+### New Features
+
+* Git for Windows [now ships with](https://github.com/git-for-windows/git/issues/466) the [Git Credential Manager for Windows](https://github.com/Microsoft/Git-Credential-Manager-for-Windows/).
+* Comes with [Git v2.7.3](http://article.gmane.org/gmane.linux.kernel/2174435).
+
+### Bug Fixes
+
+* We [now handle UTF-8 merge and squash messages correctly in Git GUI](https://github.com/git-for-windows/git/issues/665).
+* When trying to modify a repository config outside of any Git worktree, [`git config` no longer creates a `.git/` directory](https://github.com/git-for-windows/git/commit/64acc338c) but prints an appropriate error message instead.
+* A new version of Git for Windows' SDK [was released](https://github.com/git-for-windows/build-extra/releases/git-sdk-1.0.3] that [works around pacman-key issues](https://github.com/git-for-windows/git/issues/670).
+* We [no longer show asterisks when reading the username for credentials](https://github.com/git-for-windows/git/pull/677).
+
+## Changes since Git for Windows v2.7.1(2) (February 12th 2016)
+
+### New Features
+
+* Git for Windows' SDK version 1.0.2 [has been released](https://github.com/git-for-windows/build-extra/releases/tag/git-sdk-1.0.2).
+* The "list references" window of `gitk` [is now wider by default](https://github.com/git-for-windows/git/pull/620).
+* Comes with [Git 2.7.2](http://article.gmane.org/gmane.linux.kernel/2158401).
+
+### Bug Fixes
+
+* The user is [now presented with a nice error message](https://github.com/git-for-windows/git/issues/527) when calling `node` while `node.exe` is not in the `PATH` (this bug also affected other interactive console programs such as `python` and `php`).
+* The arrow keys [are respected again in gitk](https://github.com/git-for-windows/git/issues/495).
+* When a too-long path is encountered, `git clean -dfx` [no longer aborts quietly](https://github.com/git-for-windows/git/issues/521).
+* Git GUI learned to [stage lines appended to a single-line file](https://github.com/git-for-windows/git/issues/515).
+* When launching `C:\Program Files\Git\bin\bash -l -i` in a cmd window and pressing Ctrl+C, [the console is no longer corrupted](https://github.com/git-for-windows/git/pull/205) (previously, the `bash.exe` redirector would terminate and both cmd & Bash would compete for user input).
+
+## Changes since Git for Windows v2.7.1 (February 6th 2016)
+
+### New Features
+
+* The context menu items in the explorer [now show icons](https://github.com/git-for-windows/build-extra/pull/97).
+
+### Bug Fixes
+
+* A bug [was fixed](https://github.com/git-for-windows/git/commit/4abc31070f683e555de95331da0990052f55caa5) where worktrees would forget their location e.g. after an interactive rebase.
+* Thanks to Eric Lawrence and Martijn Laan, [our installer sports a better way to look for system files now](https://github.com/git-for-windows/build-extra/tree/master/installer/InnoSetup).
+
+## Changes since Git for Windows v2.7.0(2) (February 2nd 2016)
+
+### New Features
+
+* Comes with [Git 2.7.1](http://article.gmane.org/gmane.comp.version-control.git/285657).
+
+### Bug Fixes
+
+* Git GUI now [starts properly even when the working directory contains non-ASCII characters](https://github.com/git-for-windows/git/issues/410).
+* We forgot to enable Address Space Layout Randomization and Data Execution Prevention on our Git wrapper, and this is [now fixed](//github.com/git-for-windows/git/issues/644).
+* A bug in one of the DLLs used by Git for Windows [was fixed](https://github.com/Alexpux/MINGW-packages/pull/1051) that prevented Git from working properly in 64-bit setups where [the `FLG_LDR_TOP_DOWN` global flag](https://technet.microsoft.com/en-us/library/cc779664%28v=ws.10%29.aspx) is set.
+
+## Changes since Git for Windows v2.7.0 (January 5th 2016)
+
+### New Features
+
+* To stave off exploits, Git for Windows [now uses Address Space Layout Randomization (ASLR) and Data Execution Prevention (DEP)](https://github.com/git-for-windows/git/pull/612).
+* Git for Windows' support for `git pull --rebase=interactive` that was dropped when the `pull` command was rewritten in C, [was resurrected](https://github.com/git/git/commit/f9219c0b3).
+* The installers are now [dual signed](https://github.com/git-for-windows/git/issues/592) with SHA-2 and SHA-1 certificates.
+* The uninstaller [is signed now, too](https://github.com/git-for-windows/git/issues/540).
+
+### Bug Fixes
+
+* When installing as administrator, we [no longer offer the option to install quiicklaunch icons](https://github.com/git-for-windows/build-extra/commit/a13ffd7c3fa24e2ac1ef3561d7a7f09a0b924338) because quicklaunch icons can only be installed per-user.
+* If a `~/.bashrc` is detected without a `~/.bash_profile`, the generated file will now [also source `~/.profile` if that exists](https://github.com/git-for-windows/build-extra/pull/91).
+* The environment variable `HOME` can now be used to set the home directory [even when running with accounts that are part of a different domain than the current (non-domain-joined) machine](https://github.com/git-for-windows/msys2-runtime/commit/9660c5ffe82b921dd2193efa18e9721f47a6b22f) (in which case the MSYS2 runtime has no way to emulate POSIX-style UIDs).
+* Git [can now fetch and push via HTTPS](https://github.com/Alexpux/MINGW-packages/pull/986) even when the `http.sslCAInfo` config variable was unset.
+* Git for Windows is now [handling the case gracefully where the current user has no permission to list the parent of the current directory](https://github.com/git-for-windows/git/pull/606).
+* More file locking issues ("Unlink of file ... failed. Should I try again?") [were fixed](https://github.com/git-for-windows/git/issues/500).
+
+## Changes since Git for Windows v2.6.4 (December 14th 2015)
+
+### New Features
+
+* Comes with [Git v2.7.0](http://article.gmane.org/gmane.linux.kernel/2118402).
+
+## Bug Fixes
+
+* Non-ASCII command-lines are now [passed properly](https://github.com/git-for-windows/msys2-runtime/commit/4c362726c41102173613658) to shell scripts.
+
+## Changes since Git for Windows v2.6.3 (November 10th 2015)
+
+### New Features
+
+* Comes with [Git v2.6.4](http://article.gmane.org/gmane.linux.kernel/2103498).
+* Also available as `.tar.bz2` packages (you need an MSYS2/Cygwin-compatible unpacker to recreate the symbolic links correctly).
+
+## Bug Fixes
+
+* Git for Windows v2.6.3's installer [failed](https://github.com/git-for-windows/git/issues/523) to [elevate privileges automatically](https://github.com/git-for-windows/git/issues/526) (reported [three times](https://github.com/git-for-windows/git/issues/528), making it a charm), and as a consequence Git for Windows 2.6.3 was frequently [installed per-user by mistake](https://github.com/git-for-windows/build-extra/commit/23672af723da18e5bc3c679e52106de3c2dec55a)
+* The bug where [`SHELL_PATH` had spaces](https://github.com/git-for-windows/git/issues/542) and that was [reported](https://github.com/git-for-windows/git/issues/498) multiple [times](https://github.com/git-for-windows/git/issues/468) has been [fixed](https://github.com/git-for-windows/msys2-runtime/commit/7f4284d245f9c736dc8ec52e12c5d67cea7e4ba9).
+* An additional work-around from upstream Git for `SHELL_PATH` containing spaces (fixing [problems with interactive rebase's `exec` command](https://github.com/git-for-windows/git/issues/542) has been applied.
+
+## Changes since Git for Windows v2.6.2 (October 19th 2015)
+
+### New Features
+
+* Comes with [Git v2.6.3](http://article.gmane.org/gmane.comp.version-control.git/280947).
+* [Enables the stack smasher to protect against buffer overflows](https://github.com/git-for-windows/git/issues/501).
+
+### Bug Fixes
+
+* Git Bash [works now even when choosing Windows' default console *and* installing into a short path (e.g. `C:\Git`)](https://github.com/git-for-windows/git/issues/509).
+* Notepad [can now really be used to edit commit messages](https://github.com/git-for-windows/git/issues/517).
+* Git's garbage collector [now handles stale `refs/remotes/origin/HEAD` gracefully](https://github.com/git-for-windows/git/issues/423).
+* The regression in Git for Windows 2.6.2 that it required administrator privileges to be installed [is now fixed](https://github.com/git-for-windows/build-extra/pull/86).
+* When `notepad` is configured as default editor, we no longer do anything specially [unless editing files inside `.git/`](https://github.com/git-for-windows/git/issues/488).
+
+## Changes since Git for Windows v2.6.1 (October 5th 2015)
+
+### New Features
+
+* Comes with Git v2.6.2
+* Users who are part of a Windows domain [now have sensible default values](https://github.com/git-for-windows/git/pull/487) for `user.name` and `user.email`.
+
+### Bug Fixes
+
+* We [no longer run out of page file space](https://github.com/git-for-windows/git/pull/486) when `git fetch`ing large repositories.
+* The description of Windows' default console is accurate now (the console became more powerful in Windows 10).
+* *Git GUI* now respects the [terminal emulation chosen at install time](https://github.com/git-for-windows/git/issues/490) when [running the *Git Bash*](https://github.com/git-for-windows/git/pull/492).
 
 ## Changes since Git-2.6.0 (September 29th 2015)
 
@@ -84,7 +250,7 @@ This package contains software from a number of other projects including Bash, z
 * The mechanism to diff `.pdf`, `.doc` and `.docx` files known from Git for Windows 1.x [has been ported to Git for Windows 2.x](https://github.com/git-for-windows/git/issues/355).
 * Git can now [access IPv6-only hosts via HTTP/HTTPS](https://github.com/git-for-windows/git/issues/370).
 
-### Bug fixes
+### Bug Fixes
 
 * The `.vimrc` in the home directory [is now allowed to have DOS line endings](https://github.com/git-for-windows/git/issues/364).
 * The `README.portable` file of the portable Git [mentions the need to run `post-install.bat`](https://github.com/git-for-windows/git/issues/394) when the archive was extracted manually.
@@ -95,7 +261,7 @@ This package contains software from a number of other projects including Bash, z
 
 ## Changes since Git-2.5.2 (September 10th 2015)
 
-### Bug fixes
+### Bug Fixes
 
 * The Git GUI [can be launched from the Start menu again](https://github.com/git-for-windows/git/issues/376).
 * It [now works](https://github.com/git-for-windows/git/pull/305) to call `git add -p -- .` when there is a large number of files.
@@ -109,9 +275,9 @@ This package contains software from a number of other projects including Bash, z
 * Comes with Git 2.5.2
 * Alternates [can now point to UNC paths](https://github.com/git-for-windows/git/pull/286), i.e. network drives.
 
-### Bug fixes
+### Bug Fixes
 
-* The MSys2 runtime was taught [not to look hard for groups](https://github.com/git-for-windows/git/issues/193), speeding up *Git Bash*'s startup time.
+* The MSYS2 runtime was taught [not to look hard for groups](https://github.com/git-for-windows/git/issues/193), speeding up *Git Bash*'s startup time.
 * A [work around](https://github.com/git-for-windows/git/issues/361) was added for [issues](https://github.com/git-for-windows/git/wiki/32-bit-issues) when installing 32-bit Git for Windows on 64-bit Windows 10.
 * The installer [no longer freezes](https://github.com/git-for-windows/git/issues/351) when there are interactive commands in the user's `.profile`.
 * `git rebase --skip` [was speeded up again](https://github.com/git-for-windows/git/issues/365).
@@ -125,7 +291,7 @@ This package contains software from a number of other projects including Bash, z
 
 * Comes with Git 2.5.1
 
-### Bug fixes
+### Bug Fixes
 
 * Backspace [works now](https://github.com/git-for-windows/git/issues/282) with ConHost-based (`cmd.exe`) terminal.
 * When there is a `~/.bashrc` but no `~/.bash_profile`, [the latter will be created automatically](https://github.com/git-for-windows/build-extra/pull/71).
@@ -145,7 +311,7 @@ This package contains software from a number of other projects including Bash, z
 * Comes with Git 2.5.0
 * On Windows 7 and later, [the *Git Bash* can now correctly be pinned to the task bar](https://github.com/git-for-windows/git/issues/263).
 
-### Bug fixes
+### Bug Fixes
 
 * The size of the installers [was reduced again](https://github.com/git-for-windows/git/issues/262), almost to the levels of Git for Windows 1.x.
 * Under certain circumstances, when the Windows machine is part of a Windows domain with lots of users, the startup of the *Git Bash* [is now faster](https://github.com/git-for-windows/git/issues/193).
@@ -157,7 +323,7 @@ This package contains software from a number of other projects including Bash, z
 
 * Comes with Git 2.4.6
 
-### Bug fixes
+### Bug Fixes
 
 * Git for Windows handles symlinks now, [even if core.symlinks does not tell Git to generate symlinks itself](https://github.com/git-for-windows/git/pull/220).
 * `git svn` learned [*not* to reuse incompatible on-disk caches left over from previous Git for Windows versions](https://github.com/git-for-windows/git/pull/246).
@@ -168,7 +334,7 @@ This package contains software from a number of other projects including Bash, z
 
 * Comes with Git 2.4.5
 
-### Bug fixes
+### Bug Fixes
 
 * Git Bash [no longer crashes when called with `TERM=msys`](https://github.com/git-for-windows/git/issues/222). This reinstates compatibility with GitHub for Windows.
 
@@ -179,7 +345,7 @@ This package contains software from a number of other projects including Bash, z
 * Comes with Git 2.4.4
 * The POSIX-to-Windows path mangling [can now be turned off](https://github.com/git-for-windows/msys2-runtime/pull/11) by setting the `MSYS_NO_PATHCONV` environment variable. This even works for individual command lines: `MSYS_NO_PATHCONV=1 cmd /c dir /x` will list the files in the current directory along with their 8.3 versions.
 
-### Bug fixes
+### Bug Fixes
 
 * `git-bash.exe` [no longer changes the working directory to the user's home directory](https://github.com/git-for-windows/git/issues/130).
 * Git [can now clone into a drive root](https://github.com/msysgit/git/issues/359), e.g. `C:\`.
@@ -192,7 +358,7 @@ This package contains software from a number of other projects including Bash, z
 
 * Comes with Git 2.4.3
 
-### Bug fixes
+### Bug Fixes
 
 * [We include `diff.exe`](https://github.com/git-for-windows/git/issues/163) just as it was the case in Git for Windows 1.x
 * The certificates for accessing remote repositories via HTTPS [are found on XP again](https://github.com/git-for-windows/git/issues/168).
@@ -207,7 +373,7 @@ This package contains software from a number of other projects including Bash, z
 * On Windows Vista and later, [NTFS junctions can be used to emulate symlinks now](https://github.com/git-for-windows/git/pull/156); To enable this emulation, the `MSYS` environment variable needs to be set to `winsymlinks:nativestrict`.
 * The *Git Bash* learned to support [several options to support running the Bash in arbitrary terminal emulators](https://github.com/git-for-windows/git/commit/ac6b03cb4).
 
-### Bug fixes
+### Bug Fixes
 
 * Just like Git for Windows 1.x, [pressing Shift+Tab in the Git Bash triggers tab completion](https://github.com/git-for-windows/build-extra/pull/59).
 * [Auto-mount the temporary directory of the current user to `/tmp/` again](https://github.com/git-for-windows/msys2-runtime/pull/9), just like Git for Windows 1.x did (thanks to MSys1's hard-coded mount point).
@@ -218,14 +384,14 @@ This package contains software from a number of other projects including Bash, z
 
 * Comes with Git 2.4.1
 
-### Bug fixes
+### Bug Fixes
 
 * When selecting the standard Windows console window for `Git Bash`, a regression was fixed that triggered [an extra console window](https://github.com/git-for-windows/git/issues/148) to be opened.
 * The password [can be entered interactively again](https://github.com/git-for-windows/git/issues/124) when `git push`ing to a HTTPS remote.
 
 ## Changes since Git-2.4.0 (May 5th 2015)
 
-### Bug fixes
+### Bug Fixes
 
 * The `.sh` file association was fixed
 * The installer will now remove files from a previous Git for Windows versions, particularly important for 32-bit -> 64-bit upgrades
@@ -240,11 +406,11 @@ This package contains software from a number of other projects including Bash, z
 * Comes with Git 2.4.0
 * Git for Windows now installs its configuration into a Windows-wide location: `%PROGRAMDATA%\Git\config` (which will be shared by libgit2-based applications with the next libgit2 version)
 
-### Bug fixes
+### Bug Fixes
 * Fixed a regression where *Git Bash* would not start properly on Windows XP
 * Tab completion works like on Linux and MacOSX (double-Tab required to show ambiguous completions)
-* In 32-bit setups, all the MSys2 `.dll`'s address ranges are adjusted ("auto-rebased") as part of the installation process
-* The post-install scripts of MSys2 are now executed as part of the installation process, too
+* In 32-bit setups, all the MSYS2 `.dll`'s address ranges are adjusted ("auto-rebased") as part of the installation process
+* The post-install scripts of MSYS2 are now executed as part of the installation process, too
 * All files that are part of the installation will now be registered so they are deleted upon uninstall
 
 ## Changes since Git-2.3.6-preview20150425
@@ -252,7 +418,7 @@ This package contains software from a number of other projects including Bash, z
 ### New Features
 * Comes with Git 2.3.7
 
-### Bug fix
+### Bug Fix
 * A flawed "fix" that ignores submodules during rebases was dropped
 * The home directory can be overridden using the `$HOME` environment variable again
 
@@ -261,7 +427,7 @@ This package contains software from a number of other projects including Bash, z
 ### New Features
 * Comes with Git 2.3.6
 
-### Bug fixes
+### Bug Fixes
 * Fixed encoding issues in Git Bash and keept the TMP environment variable intact.
 * Downgraded the `nettle` packages due to an [*MSYS2* issue](https://github.com/Alexpux/MINGW-packages/issues/549)
 * A couple of fixes to the Windows-specific Git wrapper
@@ -273,7 +439,7 @@ This package contains software from a number of other projects including Bash, z
 
 ### New Features
 * Comes with Git 2.3.5 plus Windows-specific patches.
-* First release based on [MSys2](https://msys2.github.io/).
+* First release based on [MSYS2](https://msys2.github.io/).
 * Support for 64-bit!
 
 ### Backwards-incompatible changes

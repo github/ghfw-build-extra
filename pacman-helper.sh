@@ -31,13 +31,20 @@ die () {
 fifo_find="/var/tmp/disowned.find"
 fifo_pacman="/var/tmp/disowned.pacman"
 
-# MSys2's mingw-w64-$arch-ca-certificates seem to lag behind ca-certificates
+# MSYS2's mingw-w64-$arch-ca-certificates seem to lag behind ca-certificates
 CURL_CA_BUNDLE=/usr/ssl/certs/ca-bundle.crt
 export CURL_CA_BUNDLE
 
 mode=
 case "$1" in
 fetch|add|remove|push|files|dirs|orphans)
+	mode="$1"
+	shift
+	;;
+upload|publish|delete_version)
+	test -n "$IKNOWWHATIMDOING" ||
+	die "You need to switch to expert mode to do that"
+
 	mode="$1"
 	shift
 	;;
@@ -89,17 +96,30 @@ fetch () {
 }
 
 upload () { # <package> <version> <arch> <filename>
+	test -z "$PACMANDRYRUN" || {
+		echo "upload: curl --netrc -fT $4 $content_url/$1/$2/$3/$4"
+		return
+	}
+	echo "Uploading $1..." >&2
 	curl --netrc -fT "$4" "$content_url/$1/$2/$3/$4" ||
 	die "Could not upload $4 to $1/$2/$3"
 }
 
 publish () { # <package> <version>
+	test -z "$PACMANDRYRUN" || {
+		echo "publish: curl --netrc -fX POST $content_url/$1/$2/publish"
+		return
+	}
 	curl --netrc -fX POST "$content_url/$1/$2/publish" ||
 	die "Could not publish $2 in $1"
 }
 
 
 delete_version () { # <package> <version>
+	test -z "$PACMANDRYRUN" || {
+		echo "delete: curl --netrc -fX DELETE $packages_url/$1/versions/$2"
+		return
+	}
 	curl --netrc -fX DELETE "$packages_url/$1/versions/$2" ||
 	die "Could not delete version $2 of $1"
 }
@@ -159,11 +179,14 @@ add () { # <file>
 			arch=${path##*-}
 			arch=${arch%.pkg.tar.xz}
 			;;
+		*.src.tar.gz)
+			arch=sources
+			;;
 		*)
 			die "Invalid package name: $path"
 			;;
 		esac
-		case " $architectures " in
+		case " $architectures sources " in
 		*" $arch "*)
 			# okay
 			;;
@@ -171,6 +194,9 @@ add () { # <file>
 			die "Unknown architecture: $arch"
 			;;
 		esac
+
+		echo "Adding ${path##*/} to $arch/" >&2
+
 		dir="$(arch_dir $arch)"
 		if test -d "$dir"
 		then
@@ -273,9 +299,24 @@ push () {
 		do
 			basename=${name%%-[0-9]*}
 			version=${name#$basename-}
-			for arch in $architectures
+			for arch in $architectures sources
 			do
-				case "$name" in
+				case "$name,$arch" in
+				mingw-w64-i686,x86_64|mingw-w64-x86_64,i686)
+					# wrong architecture
+					continue
+					;;
+				mingw-w64-i686-*,sources)
+					# sources are "included" in x86_64
+					continue
+					;;
+				mingw-w64-x86_64-*,sources)
+					# sources are "included" in x86_64
+					filename=mingw-w64${name#*_64}.src.tar.gz
+					;;
+				*,sources)
+					filename=$name.src.tar.gz
+					;;
 				mingw-w64-*)
 					filename=$name-any.pkg.tar.xz
 					;;

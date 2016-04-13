@@ -30,7 +30,8 @@ pacman_list () {
 # Packages that have been added after Git SDK 1.0.0 was released...
 required=
 for req in mingw-w64-$ARCH-connect git-flow unzip docx2txt \
-	mingw-w64-$ARCH-antiword mingw-w64-$ARCH-xpdf
+	mingw-w64-$ARCH-antiword mingw-w64-$ARCH-xpdf \
+	mingw-w64-$ARCH-git-credential-manager
 do
 	test -d /var/lib/pacman/local/$req-[0-9]* ||
 	required="$required $req"
@@ -40,6 +41,7 @@ pacman -S --noconfirm $required >&2 ||
 die "Could not install required packages: $required"
 
 pacman_list mingw-w64-$ARCH-git mingw-w64-$ARCH-git-doc-html \
+	mingw-w64-$ARCH-git-credential-manager \
 	git-extra ncurses mintty vim openssh winpty \
 	sed awk less grep gnupg tar findutils coreutils diffutils patch \
 	dos2unix which subversion mingw-w64-$ARCH-tk \
@@ -67,14 +69,21 @@ grep -v -e '\.[acho]$' -e '\.l[ao]$' -e '/aclocal/' \
 	-e '^/mingw../.*/git-\(remote-testsvn\|shell\)\.exe$' \
 	-e '^/mingw../lib/tdbc' \
 	-e '^/mingw../share/git\(k\|-gui\)/lib/msgs/' \
-	-e '^/mingw../share/locale/' \
 	-e '^/usr/bin/msys-\(db\|icu\|gfortran\|stdc++\|quadmath\)[^/]*\.dll$' \
 	-e '^/usr/bin/dumper\.exe$' \
-	-e '^/usr/share/locale/' \
 	-e '^/usr/share.*/magic$' \
 	-e '^/usr/share/perl5/core_perl/Unicode/Collate/Locale/' \
 	-e '^/usr/share/perl5/core_perl/pods/' \
-	-e '^/usr/share/vim/vim74/lang/' |
+	-e '^/usr/share/vim/vim74/lang/' \
+	-e '^/etc/profile.d/git-sdk.sh$' |
+if test -n "$WITH_L10N"
+then
+	cat
+else
+	grep -v \
+		-e '^/mingw../share/locale/' \
+		-e '^/usr/share/locale/'
+fi |
 grep --perl-regexp -v -e '^/usr/(lib|share)/terminfo/(?!.*/(cygwin|dumb|xterm.*)$)' |
 sed 's/^\///'
 
@@ -101,4 +110,5 @@ usr/bin/getopt.exe
 mingw$BITNESS/etc/gitattributes
 mingw$BITNESS/bin/pdftotext.exe
 mingw$BITNESS/bin/libstdc++-6.dll
+usr/bin/column.exe
 EOF
