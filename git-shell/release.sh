@@ -49,7 +49,7 @@ x86_64)
 esac
 VERSION=$1
 shift
-TARGET="$HOME"/PortableGit.7z
+TARGET="$output_directory"/PortableGit.7z
 OPTS7="-m0=lzma -mx=9 -md=$MD_ARG -mfb=273 -ms=256M "
 
 SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
