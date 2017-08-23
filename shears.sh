@@ -203,7 +203,10 @@ cleanup () {
 		merge $rewritten
 		git update-ref -d refs/rewritten/$rewritten
 	done &&
-	git config --unset alias..r
+	if ! test -f "$git_dir"/before-rebase-merge/cross-validating
+	then
+		git config --unset alias..r
+	fi
 }
 
 merging=
@@ -297,9 +300,9 @@ ensure_labeled () {
 generate_script () {
 	echo "Generating script..." >&2
 	origtodo="$(git rev-list --no-merges --cherry-pick --pretty=oneline \
-		--abbrev-commit --abbrev=7 --reverse --left-right --topo-order \
-		$upstream..$head | \
-		sed -n "s/^>/pick /p")"
+		--abbrev-commit --reverse --right-only --topo-order \
+		$(test "$onto" = "$upstream" || echo ^$upstream) $onto...$head | \
+		sed "s/^/pick /")"
 	shorthead=$(git rev-parse --short $head)
 	shortonto=$(git rev-parse --short $onto)
 
@@ -307,7 +310,7 @@ generate_script () {
 	# merges, so we generate the topoligical order ourselves here
 
 	list="$(git log --format='%h %p' --topo-order --reverse \
-		$upstream..$head)"
+		$(test "$onto" = "$upstream" || echo ^$upstream) $onto..$head)"
 
 	todo=
 	if test -n "$merging"
@@ -458,8 +461,11 @@ EOF
 			grep -n -e "^\(pick\|# skip\) $commit" \
 				-e "^merge [-_\\.0-9a-zA-Z/ ]* -C $commit")"
 		linenumber=${linenumber%%:*}
-		test -n "$linenumber" ||
-		die "Internal error: could not find $commit ($(name_commit $commit)) in $todo"
+		test -n "$linenumber" || {
+			echo "Warning: could not find $commit ($(name_commit $commit)); assuming 'onto'" >&2
+			linenumber=1
+		}
+
 		todo="$(printf '%s' "$todo" |
 			sed "${linenumber}a\\
 mark $(name_commit $commit)\\
@@ -579,15 +585,15 @@ setup () {
 
 	git config alias..r "!sh \"$this\"" &&
 	generate_script > "$git_dir"/SHEARS-SCRIPT &&
-	GIT_EDITOR="$(cd "$git_dir" && pwd)/SHEARS-EDITOR" &&
-	cat > "$GIT_EDITOR" << EOF &&
+	shears_editor="$(cd "$git_dir" && pwd)/SHEARS-EDITOR" &&
+	cat > "$shears_editor" << EOF &&
 #!/bin/sh
 
 exec "$this" edit "$(git var GIT_EDITOR)" "\$@"
 EOF
-	chmod +x "$GIT_EDITOR" &&
-	GIT_EDITOR="\"$GIT_EDITOR\"" &&
-	GIT_SEQUENCE_EDITOR="$GIT_EDITOR" &&
+	chmod +x "$shears_editor" &&
+	GIT_EDITOR="\"$shears_editor\"" &&
+	GIT_SEQUENCE_EDITOR="$shears_editor" &&
 	export GIT_EDITOR GIT_SEQUENCE_EDITOR
 }
 

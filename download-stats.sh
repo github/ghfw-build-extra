@@ -18,66 +18,111 @@ test "--update" != "$1" || {
 }
 
 # IDs
-# v2.3.5.windows.8
-#id=${1:-1148462}
-# v2.3.6.windows.2
-#id=${1:-1215956}
-# v2.3.7.windows.1
-#id=${1:-1235013}
-# v2.4.0.windows.1
-#id=${1:-1257687}
-# v2.4.0.windows.2
-#id=${1:-1272221}
-# v2.4.1.windows.1
-#id=${1:-1296332}
-# v2.4.2.windows.1
-#id=${1:-1345088}
-# v2.4.3.windows.1
-#id=${1:-1409345}
-# v2.4.4.windows.2
-#id=${1:-1441039}
-# v2.4.5.windows.1
-#id=${1:-1471836}
-# v2.4.6.windows.1
-#id=${1:-1554860}
-# v2.5.0.windows.1
-#id=${1:-1683962}
-# v2.5.1.windows.1
-#id=${1:-1744098}
-# v2.5.2.windows.1
-#id=${1:-1796452}
-# v2.5.2.windows.2
-#id=${1:-1804946}
-# v2.5.3.windows.1
-#id=${1:-1835755}
-# v2.6.0.windows.1
-#id=${1:-1886219}
-# v2.6.1.windows.1
-#id=${1:-1914287}
-# v2.6.2.windows.1
-#id=${1:-1984920}
-# v2.6.3.windows.1
-#id=${1:-2104213}
-# v2.6.4.windows.1
-#id=${1:-2285622}
-# v2.7.0.windows.1
-#id=${1:-2375145}
-# v2.7.0.windows.2
-#id=${1:-2538484}
-# v2.7.1.windows.1
-#id=${1:-2566181}
-# v2.7.1.windows.2
-#id=${1:-2602217}
-# v2.7.2.windows.1
-#id=${1:-2671180}
-# v2.7.3.windows.1
-#id=${1:-2818116}
-# v2.7.4.windows.1
-#id=${1:-2838068}
-# v2.8.0.windows.1
-#id=${1:-2906101}
-# v2.8.1.windows.1
-id=${1:-2944817}
+# v2.10.1.windows.2
+#id=${1:-4382260}
+# v2.10.2.windows.1
+#id=${1:-4547425}
+# v2.11.0-rc0.windows.1
+#id=${1:-4574263}
+# v2.11.0-rc0.windows.2
+#id=${1:-4637903}
+# v2.11.0-rc1.windows.1
+#id=${1:-4665420}
+# v2.11.0-rc2.windows.1
+#id=${1:-4705463}
+# v2.11.0-rc3.windows.1
+#id=${1:-4755145}
+# v2.11.0.windows.1
+#id=${1:-4805052}
+# prerelease-v2.11.0.windows.1.1
+#id=${1:-4880739}
+# v2.11.1.windows-prerelease.1
+#id=${1:-5001367}
+# v2.11.1.mingit-prerelease.1
+#id=${1:-5068926}
+# v2.11.0.windows.2
+#id=${1:-5153384}
+# v2.11.0.windows.3
+#id=${1:-5159523}
+# v2.11.1.windows-prerelease.2
+#id=${1:-5220049}
+# v2.11.1.windows.1
+#id=${1:-5349389}
+# v2.12.0.windows.1
+#id=${1:-5571947}
+# v2.12.0.windows.2
+#id=${1:-5757342}
+# v2.12.1.windows.1
+#id=${1:-5819520}
+# v2.12.2.windows.1
+#id=${1:-5885060}
+# v2.12.2.windows.2
+#id=${1:-5987210}
+# v2.13.0.windows.1
+#id=${1:-6335523}
+# v2.13.1.windows.1
+#id=${1:-6694419}
+# v2.13.1.windows.2
+#id=${1:-6727667}
+# v2.13.2.windows.1
+#id=${1:-6835647}
+# v2.13.3.windows.1
+#id=${1:-7027502}
+# v2.14.0.windows.1
+#id=${1:-7295280}
+# v2.14.0.windows.2
+#id=${1:-7302996}
+# v2.12.2.windows.3
+#id=${1:-7350784}
+# v2.13.1.windows.3
+#id=${1:-7350859}
+# v2.14.1.windows.1
+id=${1:-7352987}
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.11.0.windows.1.1
+# v2.11.1.mingit-prerelease.1
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.10.0.windows.1.11.geda474c
+# prerelease-v2.10.0.windows.1.11.geda474c
 
 case "$id" in
 *.*)

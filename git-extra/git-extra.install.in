@@ -14,6 +14,29 @@ GITCONFIG
 @@GITATTRIBUTES@@
 
 GITATTRIBUTES
+
+		grep -q '^\*\.docm' /$dir/etc/gitattributes ||
+		sed -i -e 's/^\*\.DOCX\(.*\)/&\n*.docm\1\n*.DOCM\1/' \
+			-e 's/^\*\.DOT\(.*\)/&\n*.dotm\1\n*.DOTM\1/' \
+			/$dir/etc/gitattributes
+
+		# Drop git-wrapper in place of builtins "to save space"
+		git_wrapper=/$dir/share/git/git-wrapper.exe
+		if test -f $git_wrapper &&
+			! cmp -s $git_wrapper /$dir/bin/git-receive-pack.exe
+		then
+			for b in $(cat /$dir/share/git/builtins.txt)
+			do
+				rm /$dir/libexec/git-core/$b &&
+				ln $git_wrapper /$dir/libexec/git-core/$b
+
+				if test -x /$dir/bin/$b
+				then
+					rm /$dir/bin/$b &&
+					ln $git_wrapper /$dir/bin/$b
+				fi
+			done
+		fi
 	done
 
 	grep -q '^db_home: env windows' /etc/nsswitch.conf ||
@@ -38,10 +61,23 @@ GITATTRIBUTES
 	grep -q '^# Fixup git-bash in non login env' /etc/bash.bashrc ||
 	printf "\n# Fixup git-bash in non login env\nshopt -q login_shell || . /etc/profile.d/git-prompt.sh\n" >> /etc/bash.bashrc
 
-	grep -q git-for-windows etc/pacman.conf ||
-	sed -i -e '/^\[mingw32\]/i[git-for-windows]\nServer = https://dl.bintray.com/$repo/pacman/$arch\nSigLevel = Optional\n' etc/pacman.conf
+	grep -q git-for-windows[^-] etc/pacman.conf ||
+	sed -i -e '/^\[mingw32\]/i[git-for-windows]\nServer = https://dl.bintray.com/$repo/pacman/$arch\n' etc/pacman.conf
 
-	test i686 != $(uname -m) ||
+	! grep -A2 git-for-windows[^-] etc/pacman.conf |
+	grep -q '^SigLevel = Optional' ||
+	sed -i -e '/\[git-for-windows\]/{N;N;s/\nSigLevel = Optional//}' \
+		etc/pacman.conf
+
+	uname_m="$(uname -m)"
+	test i686 = "$uname_m" ||
+	grep -q git-for-windows-mingw32 etc/pacman.conf ||
+	sed -i -e '/^\[mingw32\]/i[git-for-windows-mingw32]\nServer = https://dl.bintray.com/git-for-windows/pacman/i686\n' etc/pacman.conf
+	test x86_64 = "$uname_m" ||
+	grep -q git-for-windows-mingw64 etc/pacman.conf ||
+	sed -i -e '/^\[mingw32\]/i[git-for-windows-mingw64]\nServer = https://dl.bintray.com/git-for-windows/pacman/x86_64\n' etc/pacman.conf
+
+	test i686 != $"uname -m" ||
 	case "$(md5sum.exe < /msys2.ico)" in
 	292ad5cd*) cp /usr/share/git/msys2-32.ico /msys2.ico;;
 	esac
@@ -82,6 +118,30 @@ test -d "$TMPDIR" || test ! -d "$TMP" || {\
 }\
 ' /etc/profile
 	}
+
+	grep -q 'case "\${MSYS2_PATH_TYPE:-inherit}"' /etc/profile ||
+	sed -i 's/{MSYS2_PATH_TYPE:-[^}]*}/{MSYS2_PATH_TYPE:-inherit}/g' \
+		/etc/profile
+
+	! grep -qw PERL_PATH /etc/profile.d/perlbin.sh 2>/dev/null ||
+	sed -i 's/PERL_PATH/PERL_PATH_EXTRA/g' /etc/profile.d/perlbin.sh
+
+	! grep -q '^# Define default printer' /etc/profile ||
+	sed -i -e '/^# Define default printer/,/^$/d' \
+		-e 's/^\(export .* \)PRINTER /\1/' /etc/profile
+
+	! grep -A3 '^ *autocmd BufReadPost \*' \
+		/usr/share/vim/vim80/defaults.vim |
+	grep -q ' exe "normal! g`\\""' ||
+	sed -i -e '/^ *autocmd BufReadPost \*/,/\\ endif$/s/^/"/' \
+		/usr/share/vim/vim80/defaults.vim
+
+	! grep -q '^if .*command -v getent' /etc/bash.bashrc ||
+	sed -i '/^if .*command -v getent/,/^fi/s/^/#/' /etc/bash.bashrc
+
+	# Ensure that Git for Windows' GPG keyring is still imported
+	pacman-key --list-keys BB3AA74136C569BB >/dev/null ||
+	pacman-key --populate git-for-windows
 }
 
 post_upgrade () {

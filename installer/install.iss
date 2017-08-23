@@ -16,7 +16,6 @@
 #define APP_CONTACT_URL 'https://github.com/git-for-windows/git/wiki/Contact'
 #define APP_URL       'https://git-for-windows.github.io/'
 #define APP_BUILTINS  'share\git\builtins.txt'
-#define APP_BINDIMAGE 'share\git\bindimage.txt'
 
 #define PLINK_PATH_ERROR_MSG 'Please enter a valid path to a Plink executable.'
 
@@ -27,11 +26,15 @@
 Compression=lzma2/ultra64
 LZMAUseSeparateProcess=yes
 #ifdef OUTPUT_TO_TEMP
-OutputBaseFilename={#APP_VERSION}
+OutputBaseFilename={#FILENAME_VERSION}
 OutputDir={#GetEnv('TEMP')}
 #else
-OutputBaseFilename={#APP_NAME+'-'+APP_VERSION}-{#BITNESS}-bit
+OutputBaseFilename={#APP_NAME+'-'+FILENAME_VERSION}-{#BITNESS}-bit
+#ifdef OUTPUT_DIRECTORY
+OutputDir={#OUTPUT_DIRECTORY}
+#else
 OutputDir={#GetEnv('USERPROFILE')}
+#endif
 #endif
 SolidCompression=yes
 SourceDir={#SourcePath}\..\..\..\..
@@ -57,7 +60,7 @@ DisableDirPage=auto
 DefaultGroupName={#APP_NAME}
 DisableProgramGroupPage=auto
 DisableReadyPage=yes
-InfoBeforeFile={#SourcePath}\gpl-2.0.rtf
+InfoBeforeFile={#SourcePath}\..\gpl-2.0.rtf
 #ifdef OUTPUT_TO_TEMP
 PrivilegesRequired=lowest
 #else
@@ -73,7 +76,7 @@ VersionInfoVersion={#APP_VERSION}
 #endif
 
 ; Cosmetic
-SetupIconFile={#SourcePath}\git.ico
+SetupIconFile={#SourcePath}\..\git.ico
 WizardImageBackColor=clWhite
 WizardImageStretch=no
 WizardImageFile={#SourcePath}\git.bmp
@@ -91,21 +94,22 @@ Name: icons\desktop; Description: On the Desktop
 Name: ext; Description: Windows Explorer integration; Types: default
 Name: ext\shellhere; Description: Git Bash Here; Types: default
 Name: ext\guihere; Description: Git GUI Here; Types: default
+Name: gitlfs; Description: Git LFS (Large File Support); Types: default; Flags: disablenouninstallwarning
 Name: assoc; Description: Associate .git* configuration files with the default text editor; Types: default
 Name: assoc_sh; Description: Associate .sh files to be run with Bash; Types: default
 Name: consolefont; Description: Use a TrueType font in all console windows
 
 [Run]
-Filename: {app}\git-bash.exe; Description: Launch Git Bash; Flags: nowait postinstall skipifsilent runasoriginaluser unchecked
+Filename: {app}\git-bash.exe; Parameters: --cd-to-home; Description: Launch Git Bash; Flags: nowait postinstall skipifsilent runasoriginaluser unchecked
 Filename: {app}\ReleaseNotes.html; Description: View Release Notes; Flags: shellexec skipifdoesntexist postinstall skipifsilent
 
 [Files]
 ; Install files that might be in use during setup under a different name.
 #include "file-list.iss"
 Source: {#SourcePath}\ReleaseNotes.html; DestDir: {app}; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore
-Source: {#SourcePath}\LICENSE.txt; DestDir: {app}; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore
+Source: {#SourcePath}\..\LICENSE.txt; DestDir: {app}; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore
 Source: {#SourcePath}\NOTICE.txt; DestDir: {app}; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore; Check: ParamIsSet('VSNOTICE')
-Source: {#SourcePath}\edit-git-bash.dll; Flags: dontcopy
+Source: {#SourcePath}\..\edit-git-bash.exe; Flags: dontcopy
 
 [Dirs]
 Name: "{app}\tmp"
@@ -117,8 +121,13 @@ Name: {group}\Git CMD; Filename: {app}\git-cmd.exe; Parameters: "--cd-to-home"; 
 
 [Messages]
 BeveledLabel={#APP_URL}
+#ifdef WINDOW_TITLE_VERSION
+SetupAppTitle={#APP_NAME} {#WINDOW_TITLE_VERSION} Setup
+SetupWindowTitle={#APP_NAME} {#WINDOW_TITLE_VERSION} Setup
+#else
 SetupAppTitle={#APP_NAME} {#APP_VERSION} Setup
 SetupWindowTitle={#APP_NAME} {#APP_VERSION} Setup
+#endif
 
 [Registry]
 ; Aides installing third-party (credential, remote, etc) helpers
@@ -232,6 +241,10 @@ Type: dirifempty; Name: {app}\etc
 ; Delete recorded install options
 Type: files; Name: {app}\etc\install-options.txt
 Type: dirifempty; Name: {app}\etc
+Type: dirifempty; Name: {app}\{#MINGW_BITNESS}\libexec\git-core
+Type: dirifempty; Name: {app}\{#MINGW_BITNESS}\libexec
+Type: dirifempty; Name: {app}\{#MINGW_BITNESS}
+Type: dirifempty; Name: {app}
 
 [Code]
 #include "helpers.inc.iss"
@@ -257,14 +270,16 @@ external 'CreateHardLinkW@Kernel32.dll stdcall delayload setuponly';
 external 'CreateHardLinkA@Kernel32.dll stdcall delayload setuponly';
 #endif
 
-function EditGitBash(ExePath:WideString;Resource:WideString):Integer;
-external 'edit_git_bash@files:edit-git-bash.dll stdcall delayload setuponly';
-
 function OverrideGitBashCommandLine(GitBashPath:String;CommandLine:String):Integer;
 var
     Msg:String;
 begin
-    Result:=EditGitBash(GitBashPath,CommandLine);
+    if not FileExists(ExpandConstant('{tmp}\edit-git-bash.exe')) then
+        ExtractTemporaryFile('edit-git-bash.exe');
+    StringChangeEx(GitBashPath,'"','\"',True);
+    StringChangeEx(CommandLine,'"','\"',True);
+    CommandLine:='"'+GitBashPath+'" "'+CommandLine+'"';
+    Exec(ExpandConstant('{tmp}\edit-git-bash.exe'),CommandLine,'',SW_HIDE,ewWaitUntilTerminated,Result);
     if Result<>0 then begin
         if Result=1 then begin
             Msg:='Unable to edit '+GitBashPath+' (out of memory).';
@@ -279,9 +294,6 @@ begin
     end;
 end;
 
-function BindImageEx(Flags:DWORD;ImageName,DllPath,SymbolPath:AnsiString;StatusRoutine:Integer):Boolean;
-external 'BindImageEx@Imagehlp.dll stdcall delayload setuponly';
-
 const
     // Git Path options.
     GP_BashOnly       = 1;
@@ -291,6 +303,10 @@ const
     // Git SSH options.
     GS_OpenSSH        = 1;
     GS_Plink          = 2;
+
+    // Git HTTPS (cURL) options.
+    GC_OpenSSL        = 1;
+    GC_WinSSL         = 2;
 
     // Git line ending conversion options.
     GC_LFOnly         = 1;
@@ -304,16 +320,19 @@ const
     // Extra options
     GP_FSCache        = 1;
     GP_GCM            = 2;
+    GP_Symlinks       = 3;
 
-    // BindImageEx API constants.
-    BIND_NO_BOUND_IMPORTS  = $00000001;
-    BIND_NO_UPDATE         = $00000002;
-    BIND_ALL_IMAGES        = $00000004;
-    BIND_CACHE_IMPORT_DLLS = $00000008;
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    // Experimental options
+    GP_BuiltinDifftool = 1;
+#endif
 
 var
     // The options chosen at install time, to be written to /etc/install-options.txt
     ChosenOptions:String;
+
+    // Previous Git for Windows version (if upgrading)
+    PreviousGitForWindowsVersion:String;
 
     // Wizard page and variables for the Path options.
     PathPage:TWizardPage;
@@ -323,6 +342,10 @@ var
     PuTTYPage:TWizardPage;
     RdbSSH:array[GS_OpenSSH..GS_Plink] of TRadioButton;
     EdtPlink:TEdit;
+
+    // Wizard page and variables for the HTTPS implementation (cURL) settings.
+    CurlVariantPage:TWizardPage;
+    RdbCurlVariant:array[GC_OpenSSL..GC_WinSSL] of TRadioButton;
 
     // Wizard page and variables for the line ending conversion options.
     CRLFPage:TWizardPage;
@@ -334,7 +357,13 @@ var
 
     // Wizard page and variables for the extra options.
     ExtraOptionsPage:TWizardPage;
-    RdbExtraOptions:array[GP_FSCache..GP_GCM] of TCheckBox;
+    RdbExtraOptions:array[GP_FSCache..GP_Symlinks] of TCheckBox;
+
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    // Wizard page and variables for the experimental options.
+    ExperimentalOptionsPage:TWizardPage;
+    RdbExperimentalOptions:array[GP_BuiltinDifftool..GP_BuiltinDifftool] of TCheckBox;
+#endif
 
     // Wizard page and variables for the processes page.
     SessionHandle:DWORD;
@@ -463,6 +492,8 @@ begin
             Caption:=Processes[i].Name+' (PID '+IntToStr(Processes[i].ID);
             if Processes[i].Restartable then begin
                 Caption:=Caption+', closing is optional';
+            end else if Processes[i].ToTerminate then begin
+                Caption:=Caption+', will be terminated';
             end else begin
                 Caption:=Caption+', closing is required';
                 ManualClosingRequired:=True;
@@ -515,8 +546,99 @@ end;
     Setup event functions
 }
 
-function InitializeSetup:Boolean;
+function NextNumber(Str:String;var Pos:Integer):Integer;
+var
+    From:Integer;
 begin
+    From:=Pos;
+    while (Pos<=Length(Str)) and (Str[Pos]>=#48) and (Str[Pos]<=#57) do
+        Pos:=Pos+1;
+    if Pos>From then
+        Result:=StrToInt(Copy(Str,From,Pos-From))
+    else
+        Result:=-1;
+end;
+
+function VersionCompare(CurrentVersion,PreviousVersion:String):Integer;
+var
+    i,j,Current,Previous:Integer;
+begin
+    Result:=0;
+    i:=1;
+    j:=1;
+    while True do begin
+        if j>Length(PreviousVersion) then begin
+	    Result:=+1;
+            Exit;
+	end;
+        if i>Length(CurrentVersion) then begin
+            Result:=-1;
+            Exit;
+        end;
+        Previous:=NextNumber(PreviousVersion,j);
+        Current:=NextNumber(CurrentVersion,i);
+        if Previous<0 then begin
+            if Current>=0 then
+                Result:=+1;
+            Exit;
+	end;
+        if Current<0 then begin
+            Result:=-1;
+            Exit;
+        end;
+        if Current>Previous then begin
+            Result:=+1;
+            Exit;
+	end;
+        if Current<Previous then begin
+            Result:=-1;
+            Exit;
+        end;
+        if j>Length(PreviousVersion) then begin
+	    if i<=Length(CurrentVersion) then
+	        Result:=+1;
+            Exit;
+	end;
+        if i>Length(CurrentVersion) then begin
+            Result:=-1;
+            Exit;
+        end;
+        if CurrentVersion[i]<>PreviousVersion[j] then begin
+            if PreviousVersion[j]='.' then
+                Result:=-1
+            else
+                Result:=+1;
+            Exit;
+        end;
+        if CurrentVersion[i]<>'.' then
+            Exit;
+        i:=i+1;
+        j:=j+1;
+    end;
+end;
+
+procedure ExitProcess(uExitCode:Integer);
+external 'ExitProcess@kernel32.dll stdcall';
+
+procedure ExitEarlyWithSuccess();
+begin
+    DelTree(ExpandConstant('{tmp}'),True,True,True);
+    ExitProcess(0);
+end;
+
+function InitializeSetup:Boolean;
+var
+    CurrentVersion,Msg:String;
+    Version:TWindowsVersion;
+    ErrorCode:Integer;
+begin
+    GetWindowsVersionEx(Version);
+    if (Version.Major<6) then begin
+        if SuppressibleMsgBox('Git for Windows requires Windows Vista or later.'+#13+'Click "Yes" for more details.',mbError,MB_YESNO,IDNO)=IDYES then
+	    ShellExec('open','https://git-for-windows.github.io/requirements.html','','',SW_SHOW,ewNoWait,ErrorCode);
+	Result:=False;
+	Exit;
+    end;
     UpdateInfFilenames;
 #if BITNESS=='32'
     Result:=True;
@@ -526,6 +648,24 @@ begin
         Result:=False;
     end else begin
         Result:=True;
+    end;
+#endif
+    RegQueryStringValue(HKEY_LOCAL_MACHINE,'Software\GitForWindows','CurrentVersion',PreviousGitForWindowsVersion);
+#if APP_VERSION!='0-test'
+    if Result and not ParamIsSet('ALLOWDOWNGRADE') then begin
+        CurrentVersion:=ExpandConstant('{#APP_VERSION}');
+        if (VersionCompare(CurrentVersion,PreviousGitForWindowsVersion)<0) then begin
+            if WizardSilent() and (ParamIsSet('SKIPDOWNGRADE') or ParamIsSet('VSNOTICE')) then begin
+                Msg:='Skipping downgrade from '+PreviousGitForWindowsVersion+' to '+CurrentVersion;
+                if ParamIsSet('SKIPDOWNGRADE') or (ExpandConstant('{log}')='') then
+                    LogError(Msg)
+                else
+                    Log(Msg);
+                ExitEarlyWithSuccess();
+            end;
+            if SuppressibleMsgBox('Git for Windows '+PreviousGitForWindowsVersion+' is currently installed.'+#13+'Do you really want to downgrade to Git for Windows '+CurrentVersion+'?',mbConfirmation,MB_YESNO or MB_DEFBUTTON2,IDNO)=IDNO then
+                Result:=False;
+        end;
     end;
 #endif
 end;
@@ -561,6 +701,16 @@ begin
         Result:=GetPreviousData(Key,Default);
 end;
 
+function ReadFileAsString(Path:String):String;
+var
+    Contents:AnsiString;
+begin
+    if not LoadStringFromFile(Path,Contents) then
+        Result:='(no output)'
+    else
+        Result:=Contents;
+end;
+
 function DetectNetFxVersion:Cardinal;
 begin
     // We are only interested in version v4.5.1 or later, therefore it
@@ -575,6 +725,35 @@ var
   ExitStatus:Integer;
 begin
   ShellExec('','https://github.com/Microsoft/Git-Credential-Manager-for-Windows','','',SW_SHOW,ewNoWait,ExitStatus);
+end;
+
+procedure OpenSymlinksWikiPage(Sender:TObject);
+var
+  ExitStatus:Integer;
+begin
+  ShellExec('','https://github.com/git-for-windows/git/wiki/Symbolic-Links','','',SW_SHOW,ewNoWait,ExitStatus);
+end;
+
+function IsOriginalUserAdmin():Boolean;
+var
+    ResultCode:Integer;
+begin
+    if not ExecAsOriginalUser(ExpandConstant('{cmd}'),ExpandConstant('/c net session >"{tmp}\net-session.txt"'),'',SW_HIDE,ewWaitUntilTerminated,ResultCode) then
+        ResultCode:=-1;
+    Result:=(ResultCode=0);
+end;
+
+function EnableSymlinksByDefault():Boolean;
+var
+    ResultCode:Integer;
+begin
+    if IsOriginalUserAdmin then begin
+        Log('Symbolic link permission detection failed: running as admin');
+	Result:=False;
+    end else begin
+        ExecAsOriginalUser(ExpandConstant('{cmd}'),ExpandConstant('/c mklink /d "{tmp}\symbolic link" "{tmp}" >"{tmp}\symlink test.txt"'),'',SW_HIDE,ewWaitUntilTerminated,ResultCode);
+        Result:=DirExists(ExpandConstant('{tmp}\symbolic link'));
+    end;
 end;
 
 function GetTextWidth(Text:String;Font:TFont):Integer;
@@ -592,10 +771,14 @@ var
     PrevPageID:Integer;
     LblGitBash,LblGitCmd,LblGitCmdTools,LblGitCmdToolsWarn:TLabel;
     LblOpenSSH,LblPlink:TLabel;
+    LblCurlOpenSSL,LblCurlWinSSL:TLabel;
     PuTTYSessions,EnvSSH:TArrayOfString;
     LblLFOnly,LblCRLFAlways,LblCRLFCommitAsIs:TLabel;
     LblMinTTY,LblConHost:TLabel;
-    LblFSCache,LblGCM,LblGCMLink:TLabel;
+    LblFSCache,LblGCM,LblGCMLink,LblSymlinks,LblSymlinksLink:TLabel;
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    LblBuiltinDifftool:TLabel;
+#endif
     BtnPlink:TButton;
     Data:String;
 begin
@@ -698,6 +881,17 @@ begin
         Height:=ScaleY(26);
         Font.Color:=255;
         Font.Style:=[fsBold];
+    end;
+
+    // Restore the setting chosen during a previous install.
+    Data:=ReplayChoice('Path Option','Cmd');
+
+    if Data='BashOnly' then begin
+        RdbPath[GP_BashOnly].Checked:=True;
+    end else if Data='Cmd' then begin
+        RdbPath[GP_Cmd].Checked:=True;
+    end else if Data='CmdTools' then begin
+        RdbPath[GP_CmdTools].Checked:=True;
     end;
 
     (*
@@ -807,6 +1001,74 @@ begin
         end;
     end else begin
         PuTTYPage:=NIL;
+    end;
+
+    (*
+     * Create a custom page for HTTPS implementation (cURL) setting.
+     *)
+
+    CurlVariantPage:=CreateCustomPage(
+        PrevPageID
+    ,   'Choosing HTTPS transport backend'
+    ,   'Which SSL/TLS library would you like Git to use for HTTPS connections?'
+    );
+    PrevPageID:=CurlVariantPage.ID;
+
+    // 1st choice
+    RdbCurlVariant[GC_OpenSSL]:=TRadioButton.Create(CurlVariantPage);
+    with RdbCurlVariant[GC_OpenSSL] do begin
+        Parent:=CurlVariantPage.Surface;
+        Caption:='Use the OpenSSL library';
+        Left:=ScaleX(4);
+        Top:=ScaleY(8);
+        Width:=ScaleX(405);
+        Height:=ScaleY(17);
+        Font.Style:=[fsBold];
+        TabOrder:=0;
+        Checked:=True;
+    end;
+    LblCurlOpenSSL:=TLabel.Create(CurlVariantPage);
+    with LblCurlOpenSSL do begin
+        Parent:=CurlVariantPage.Surface;
+        Caption:='Server certificates will be validated using the ca-bundle.crt file.';
+        Left:=ScaleX(28);
+        Top:=ScaleY(32);
+        Width:=ScaleX(405);
+        Height:=ScaleY(47);
+    end;
+
+    // 2nd choice
+    RdbCurlVariant[GC_WinSSL]:=TRadioButton.Create(CurlVariantPage);
+    with RdbCurlVariant[GC_WinSSL] do begin
+        Parent:=CurlVariantPage.Surface;
+        Caption:='Use the native Windows Secure Channel library';
+        Left:=ScaleX(4);
+        Top:=ScaleY(76);
+        Width:=ScaleX(405);
+        Height:=ScaleY(17);
+        Font.Style:=[fsBold];
+        TabOrder:=1;
+        Checked:=False;
+    end;
+    LblCurlWinSSL:=TLabel.Create(CurlVariantPage);
+    with LblCurlWinSSL do begin
+        Parent:=CurlVariantPage.Surface;
+        Caption:='Server certificates will be validated using Windows Certificate Stores.' + #13 +
+            'This option also allows you to use your company''s internal Root CA certificates' + #13 +
+            'distributed e.g. via Active Directory Domain Services.';
+        Left:=ScaleX(28);
+        Top:=ScaleY(100);
+        Width:=ScaleX(405);
+        Height:=ScaleY(67);
+    end;
+
+    // Restore the setting chosen during a previous install.
+    Data:=ReplayChoice('CURL Option','OpenSSL');
+
+    if Data='OpenSSL' then begin
+        RdbCurlVariant[GC_OpenSSL].Checked:=True;
+    end else if Data='WinSSL' then begin
+        RdbCurlVariant[GC_WinSSL].Checked:=True;
     end;
 
     (*
@@ -1020,6 +1282,13 @@ begin
         Height:=ScaleY(39);
     end;
 
+    // Restore the settings chosen during a previous install.
+    Data:=ReplayChoice('Performance Tweaks FSCache','Enabled');
+
+    if Data='Enabled' then begin
+        RdbExtraOptions[GP_FSCache].Checked:=True;
+    end;
+
     // 2nd option
     RdbExtraOptions[GP_GCM]:=TCheckBox.Create(ExtraOptionsPage);
     with RdbExtraOptions[GP_GCM] do begin
@@ -1036,7 +1305,7 @@ begin
     with LblGCM do begin
         Parent:=ExtraOptionsPage.Surface;
         Caption:=
-            'The Git Credential Manager for Windows provides secure Git credential storage'+#13+'for Windows, most notably multi-factor authentication support for Visual Studio'+#13+'Team Services and GitHub. (requires .NET framework v4.5.1 or or later)';
+            'The Git Credential Manager for Windows provides secure Git credential storage'+#13+'for Windows, most notably multi-factor authentication support for Visual Studio'+#13+'Team Services and GitHub. (requires .NET framework v4.5.1 or or later).';
         Left:=ScaleX(28);
         Top:=ScaleY(104);
         Width:=ScaleX(405);
@@ -1067,6 +1336,97 @@ begin
         RdbExtraOptions[GP_GCM].Checked:=Data='Enabled';
     end;
 
+    // 3rd option
+    RdbExtraOptions[GP_Symlinks]:=TCheckBox.Create(ExtraOptionsPage);
+    with RdbExtraOptions[GP_Symlinks] do begin
+        Parent:=ExtraOptionsPage.Surface;
+        Caption:='Enable symbolic links';
+        Left:=ScaleX(4);
+        Top:=ScaleY(152);
+        Width:=ScaleX(405);
+        Height:=ScaleY(17);
+        Font.Style:=[fsBold];
+        TabOrder:=1;
+    end;
+    LblSymlinks:=TLabel.Create(ExtraOptionsPage);
+    with LblSymlinks do begin
+        Parent:=ExtraOptionsPage.Surface;
+        Caption:=
+            'Enable symbolic links (requires the SeCreateSymbolicLink permission).'+#13+'Please note that existing repositories are unaffected by this setting.';
+        Left:=ScaleX(28);
+        Top:=ScaleY(176);
+        Width:=ScaleX(405);
+        Height:=ScaleY(26);
+    end;
+    LblSymlinksLink:=TLabel.Create(ExtraOptionsPage);
+    with LblSymlinksLink do begin
+        Parent:=ExtraOptionsPage.Surface;
+        Caption:='symbolic links';
+        Left:=GetTextWidth('Enable ',LblSymlinks.Font)+ScaleX(28);
+        Top:=ScaleY(176);
+        Width:=ScaleX(405);
+        Height:=ScaleY(13);
+        Font.Color:=clBlue;
+        Font.Style:=[fsUnderline];
+        Cursor:=crHand;
+        OnClick:=@OpenSymlinksWikiPage;
+    end;
+
+    // Restore the settings chosen during a previous install, or auto-detect
+    // by running `mklink` (unless started as administrator, in which case that
+    // test would be meaningless).
+    Data:=ReplayChoice('Enable Symlinks','Auto');
+    if (Data='Auto') Or ((Data='Disabled') And (VersionCompare(PreviousGitForWindowsVersion,'2.14.1')<=0)) then begin
+        if EnableSymlinksByDefault() then
+	    Data:='Enabled'
+	else
+	    Data:='Disabled';
+    end;
+
+    RdbExtraOptions[GP_Symlinks].Checked:=Data='Enabled';
+
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    (*
+     * Create a custom page for experimental options.
+     *)
+
+    ExperimentalOptionsPage:=CreateCustomPage(
+        PrevPageID
+    ,   'Configuring experimental options'
+    ,   'Which bleeding-edge features would you like to enable?'
+    );
+    PrevPageID:=ExperimentalOptionsPage.ID;
+
+    // 1st option
+    RdbExperimentalOptions[GP_BuiltinDifftool]:=TCheckBox.Create(ExperimentalOptionsPage);
+    with RdbExperimentalOptions[GP_BuiltinDifftool] do begin
+        Parent:=ExperimentalOptionsPage.Surface;
+        Caption:='Enable experimental, builtin difftool';
+        Left:=ScaleX(4);
+        Top:=ScaleY(8);
+        Width:=ScaleX(405);
+        Height:=ScaleY(17);
+        Font.Style:=[fsBold];
+        TabOrder:=1;
+    end;
+    LblBuiltinDifftool:=TLabel.Create(ExperimentalOptionsPage);
+    with LblBuiltinDifftool do begin
+        Parent:=ExperimentalOptionsPage.Surface;
+        Caption:=
+            'Use the experimental builtin difftool (fast, but only lightly tested).';
+        Left:=ScaleX(28);
+        Top:=ScaleY(32);
+        Width:=ScaleX(405);
+        Height:=ScaleY(13);
+    end;
+
+    // Restore the settings chosen during a previous install
+    Data:=ReplayChoice('Enable Builtin Difftool','Auto');
+    if Data='Auto' then
+            RdbExperimentalOptions[GP_BuiltinDifftool].Checked:=False
+	else
+            RdbExperimentalOptions[GP_BuiltinDifftool].Checked:=Data='Enabled';
+#endif
 
     (*
      * Create a custom page for finding the processes that lock a module.
@@ -1099,7 +1459,11 @@ begin
     // This button is only used by the uninstaller.
     ContinueButton:=NIL;
 
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    PageIDBeforeInstall:=ExperimentalOptionsPage.ID;
+#else
     PageIDBeforeInstall:=ExtraOptionsPage.ID;
+#endif
 
 #ifdef DEBUG_WIZARD_PAGE
     DebugWizardPage:={#DEBUG_WIZARD_PAGE}.ID;
@@ -1110,10 +1474,6 @@ end;
 
 function ShouldSkipPage(PageID:Integer):Boolean;
 begin
-#ifdef DEBUG_WIZARD_PAGE
-    Result:=PageID<>DebugWizardPage
-    Exit;
-#endif
     if (ProcessesPage<>NIL) and (PageID=ProcessesPage.ID) then begin
         // This page is only reached forward (by pressing "Next", never by pressing "Back").
         RefreshProcessList(NIL);
@@ -1121,6 +1481,10 @@ begin
     end else begin
         Result:=False;
     end;
+#ifdef DEBUG_WIZARD_PAGE
+    Result:=PageID<>DebugWizardPage
+    Exit;
+#endif
 end;
 
 procedure CurPageChanged(CurPageID:Integer);
@@ -1153,6 +1517,7 @@ function NextButtonClick(CurPageID:Integer):Boolean;
 var
     i:Integer;
     Version:TWindowsVersion;
+    Msg:String;
 begin
     // On a silent install, if your NextButtonClick function returns False
     // prior to installation starting, Setup will exit automatically.
@@ -1182,7 +1547,22 @@ begin
         // It would have been nicer to just disable the "Next" button, but the
         // WizardForm exports the button just read-only.
         for i:=0 to GetArrayLength(Processes)-1 do begin
-            if not Processes[i].Restartable then begin
+            if Processes[i].ToTerminate then begin
+	        if not TerminateProcessByID(Processes[i].ID) then begin
+                    SuppressibleMsgBox('Failed to terminate '+Processes[i].Name+' (pid '+IntToStr(Processes[i].ID)+')'+#13+'Please terminate it manually and press the "Refresh" button.',mbCriticalError,MB_OK,IDOK);
+                    Result:=False;
+                    Exit;
+                end;
+		    ;
+            end else if not Processes[i].Restartable then begin
+	        if WizardSilent() and (ParamIsSet('SKIPIFINUSE') or ParamIsSet('VSNOTICE')) then begin
+		    Msg:='Skipping installation because the process '+Processes[i].Name+' (pid '+IntToStr(Processes[i].ID)+') is running, using Git for Windows'+#39+' files.';
+		    if ParamIsSet('SKIPIFINUSE') or (ExpandConstant('{log}')='') then
+		        LogError(Msg)
+		    else
+		        Log(Msg);
+		    ExitEarlyWithSuccess();
+		end;
                 SuppressibleMsgBox(
                     'Setup cannot continue until you close at least those applications in the list that are marked as "closing is required".'
                 ,   mbCriticalError
@@ -1283,7 +1663,7 @@ begin
 
         if RegQueryStringValue(Domain,Key,'UninstallString',UninstallString) then
             // Using ShellExec() here, in case privilege elevation is required
-            if not ShellExec('',UninstallString,'/SILENT /NORESTART /SUPPRESSMSGBOXES','',SW_HIDE,ewWaitUntilTerminated,ErrorCode) then
+            if not ShellExec('',UninstallString,'/VERYSILENT /SILENT /NORESTART /SUPPRESSMSGBOXES','',SW_HIDE,ewWaitUntilTerminated,ErrorCode) then
                 LogError('Could not uninstall previous version. Trying to continue anyway.');
     end;
 end;
@@ -1319,8 +1699,9 @@ begin
     if FindFirst(ExpandConstant(Bin+'*.dll'), FindRec) then
     try
         repeat
-            if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0) and
-                    not FileExists(LibExec+FindRec.Name) then begin
+            if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0) then begin
+                if FileExists(LibExec+FindRec.Name) then
+                    DeleteFile(LibExec+FindRec.Name);
                 HardlinkOrCopy(LibExec+FindRec.Name,Bin+FindRec.Name);
             end;
         until
@@ -1328,6 +1709,21 @@ begin
     finally
         FindClose(FindRec);
     end;
+end;
+
+function ReplaceFile(SourceFile,TargetFile:String):Boolean;
+begin
+    if not DeleteFile(TargetFile) then begin
+        LogError('Line {#__LINE__}: Unable to delete file "'+TargetFile+'".');
+        Result:=False;
+        Exit;
+    end;
+    if not RenameFile(SourceFile,TargetFile) then begin
+        LogError('Line {#__LINE__}: Unable to overwrite file "'+TargetFile+'" with "'+SourceFile+'".');
+        Result:=False;
+        Exit;
+    end;
+    Result:=True;
 end;
 
 procedure CurStepChanged(CurStep:TSetupStep);
@@ -1339,7 +1735,7 @@ var
 begin
     if CurStep=ssInstall then begin
 #ifdef DEBUG_WIZARD_PAGE
-        Abort();
+        ExitEarlyWithSuccess();
 #endif
         // Shutdown locking processes just before the actual installation starts.
         if SessionHandle>0 then try
@@ -1360,28 +1756,6 @@ begin
 
     AppDir:=ExpandConstant('{app}');
     ProgramData:=ExpandConstant('{commonappdata}');
-
-    {
-        Bind the imported function addresses
-    }
-
-    try
-        DllPath:=ExpandConstant('{app}\usr\bin;{app}\{#MINGW_BITNESS}\bin;{sys}');
-
-        // Load the list of images from a text file.
-        FileName:=AppDir+'\{#APP_BINDIMAGE}';
-        if LoadStringsFromFile(FileName,ImageNames) then begin
-            Count:=GetArrayLength(ImageNames)-1;
-            for i:=0 to Count do begin
-                FileName:=AppDir+'\'+ImageNames[i];
-                if not BindImageEx(BIND_NO_BOUND_IMPORTS or BIND_CACHE_IMPORT_DLLS,FileName,DllPath,'',0) then begin
-                    Log('Line {#__LINE__}: Error calling BindImageEx for "'+FileName+'".');
-                end;
-            end;
-        end;
-    except
-        Log('Line {#__LINE__}: An exception occurred while calling BindImageEx.');
-    end;
 
     {
         Copy dlls from "/mingw64/bin" to "/mingw64/libexec/git-core" if they are
@@ -1448,24 +1822,42 @@ begin
                 Log('Line {#__LINE__}: Creating directory "' + ProgramData + '\Git" failed.');
             end;
         end;
-        if not FileCopy(AppDir + '\{#MINGW_BITNESS}\etc\gitconfig', ProgramData + '\Git\config', True) then begin
-            Log('Line {#__LINE__}: Creating copy "' + ProgramData + '\Git\config" failed.');
+        if not FileExists(ExpandConstant('{tmp}\programdata-config.template')) then
+            ExtractTemporaryFile('programdata-config.template');
+        if not FileCopy(ExpandConstant('{tmp}\programdata-config.template'), ProgramData + '\Git\config', True) then begin
+            Log('Line {#__LINE__}: Creating initial "' + ProgramData + '\Git\config" failed.');
         end;
     end;
     if FileExists(ProgramData+'\Git\config') then begin
-#if BITNESS=='64'
         if not Exec(AppDir+'\bin\bash.exe','-c "value=\"$(git config -f config pack.packsizelimit)\" && if test 2g = \"$value\"; then git config -f config --unset pack.packsizelimit; fi"',ProgramData+'\Git',SW_HIDE,ewWaitUntilTerminated,i) then
-            LogError('Unable to read/adjust packsize limit');
+            LogError('Unable to remove packsize limit from ProgramData config');
+#if BITNESS=='32'
+        if not Exec(AppDir+'\{#MINGW_BITNESS}\bin\git.exe','config --system pack.packsizelimit 2g',AppDir,SW_HIDE,ewWaitUntilTerminated,i) then
+            LogError('Unable to limit packsize to 2GB');
 #endif
+        Cmd:=AppDir+'/';
+        StringChangeEx(Cmd,'\','/',True);
+        if not Exec(AppDir+'\bin\bash.exe','-c "value=\"$(git config -f config http.sslcainfo)\" && case \"$value\" in \"'+Cmd+'\"/*|\"C:/Program Files/Git/\"*|\"c:/Program Files/Git/\"*) git config -f config --unset http.sslcainfo;; esac"',ProgramData+'\Git',SW_HIDE,ewWaitUntilTerminated,i) then
+            LogError('Unable to delete http.sslCAInfo from ProgramData config');
         Cmd:='http.sslCAInfo "'+AppDir+'/{#MINGW_BITNESS}/ssl/certs/ca-bundle.crt"';
         StringChangeEx(Cmd,'\','/',True);
-        if not Exec(AppDir+'\{#MINGW_BITNESS}\bin\git.exe','config -f config '+Cmd,
-                ProgramData+'\Git',SW_HIDE,ewWaitUntilTerminated,i) then
+        if not Exec(AppDir+'\{#MINGW_BITNESS}\bin\git.exe','config --system '+Cmd,
+                AppDir,SW_HIDE,ewWaitUntilTerminated,i) then
             LogError('Unable to configure SSL CA info: ' + Cmd);
-        if not DeleteFile(AppDir+'\{#MINGW_BITNESS}\etc\gitconfig') then begin
-            Log('Line {#__LINE__}: Deleting template config "' + AppDir + '\{#MINGW_BITNESS}\etc\gitconfig" failed.');
-        end;
     end;
+
+    {
+        Configure http.sslBackend according to the user's choice.
+    }
+
+    if RdbCurlVariant[GC_WinSSL].Checked then begin
+        Cmd:='schannel';
+    end else begin
+        Cmd:='openssl';
+    end;
+    if not Exec(AppDir+'\{#MINGW_BITNESS}\bin\git.exe','config --system http.sslBackend '+Cmd,
+                AppDir,SW_HIDE,ewWaitUntilTerminated,i) then
+        LogError('Unable to configure the HTTPS backend: '+Cmd);
 
     {
         Adapt core.autocrlf
@@ -1508,6 +1900,28 @@ begin
                     AppDir, SW_HIDE, ewWaitUntilTerminated, i) then
             LogError('Unable to enable the extra option: ' + Cmd);
     end;
+
+    if RdbExtraOptions[GP_Symlinks].checked then
+        Cmd:='core.symlinks true'
+    else
+        Cmd:='core.symlinks false';
+    if not Exec(AppDir + '\{#MINGW_BITNESS}\bin\git.exe', 'config -f config ' + Cmd,
+                ProgramData + '\Git', SW_HIDE, ewWaitUntilTerminated, i) then
+        LogError('Unable to enable the extra option: ' + Cmd);
+
+    {
+        Configure experimental options
+    }
+
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    if RdbExperimentalOptions[GP_BuiltinDifftool].checked then begin
+        if not Exec(AppDir + '\{#MINGW_BITNESS}\bin\git.exe','config --system difftool.useBuiltin true','',SW_HIDE,ewWaitUntilTerminated, i) then
+        LogError('Could not configure difftool.useBuiltin')
+    end else begin
+        if not Exec(AppDir + '\{#MINGW_BITNESS}\bin\git.exe','config --system --unset difftool.useBuiltin','',SW_HIDE,ewWaitUntilTerminated, i) then
+        LogError('Could not configure difftool.useBuiltin')
+    end;
+#endif
 
     {
         Modify the environment
@@ -1601,30 +2015,47 @@ begin
     if IsComponentSelected('ext\shellhere') then begin
         Msg:='Git Ba&sh Here';
         Cmd:='"'+AppDir+'\git-bash.exe" "--cd=%1"';
-        Ico:='"'+AppDir+'\{#MINGW_BITNESS}\share\git\git-for-windows.ico"';
+        Ico:=AppDir+'\git-bash.exe';
         if (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_shell','',Msg)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_shell\command','',Cmd)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_shell','Icon',Ico)) or
            (StringChangeEx(Cmd,'%1','%v.',false)<>1) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_shell','',Msg)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_shell\command','',Cmd)) or
-           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_shell','Icon',Ico)) then
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_shell','Icon',Ico)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\background\shell\git_shell','',Msg)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\background\shell\git_shell\command','',Cmd)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\background\shell\git_shell','Icon',Ico)) then
             LogError('Line {#__LINE__}: Unable to create "Git Bash Here" shell extension.');
     end;
 
     if IsComponentSelected('ext\guihere') then begin
         Msg:='Git &GUI Here';
         Cmd:='"'+AppDir+'\cmd\git-gui.exe" "--working-dir" "%1"';
-        Ico:='"'+AppDir+'\{#MINGW_BITNESS}\share\git\git-for-windows.ico"';
+        Ico:=AppDir+'\cmd\git-gui.exe';
         if (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_gui','',Msg)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_gui\command','',Cmd)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\shell\git_gui','Icon',Ico)) or
            (StringChangeEx(Cmd,'%1','%v.',false)<>1) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_gui','',Msg)) or
            (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_gui\command','',Cmd)) or
-           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_gui','Icon',Ico))
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\Directory\Background\shell\git_gui','Icon',Ico)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\Background\shell\git_gui','',Msg)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\Background\shell\git_gui\command','',Cmd)) or
+           (not RegWriteStringValue(RootKey,'SOFTWARE\Classes\LibraryFolder\Background\shell\git_gui','Icon',Ico))
         then
             LogError('Line {#__LINE__}: Unable to create "Git GUI Here" shell extension.');
+    end;
+
+    {
+        Optionally disable Git LFS completely
+    }
+
+    if not IsComponentSelected('gitlfs') then begin
+        if not Exec(AppDir + '\{#MINGW_BITNESS}\bin\git.exe','config --system --remove-section filter.lfs','',SW_HIDE,ewWaitUntilTerminated, i) then
+            LogError('Could not disable Git LFS in the gitconfig.');
+        if not DeleteFile(AppDir+'\{#MINGW_BITNESS}\bin\git-lfs.exe') and not DeleteFile(AppDir+'\{#MINGW_BITNESS}\libexec\git-core\git-lfs.exe') then
+            LogError('Line {#__LINE__}: Unable to delete "git-lfs.exe".');
     end;
 
     {
@@ -1632,8 +2063,12 @@ begin
     }
 
     Cmd:=AppDir+'\post-install.bat';
-    if not Exec(Cmd, '', AppDir, SW_HIDE, ewWaitUntilTerminated, i) then
-        LogError('Line {#__LINE__}: Unable to run post-install scripts.');
+    if not Exec(Cmd,ExpandConstant('>"{tmp}\post-install.log"'),AppDir,SW_HIDE,ewWaitUntilTerminated,i) or (i<>0) then begin
+        if FileExists(ExpandConstant('>"{tmp}\post-install.log"')) then
+            LogError('Line {#__LINE__}: Unable to run post-install scripts:'+#13+ReadFileAsString(ExpandConstant('{tmp}\post-install.log')))
+	else
+	    Log('post-install output:'+#13+ReadFileAsString(ExpandConstant('{tmp}\post-install.log')));
+    end;
 
     {
         Restart any processes that were shut down via the Restart Manager
@@ -1672,6 +2107,13 @@ begin
     end;
     RecordChoice(PreviousDataKey,'SSH Option',Data);
 
+    // HTTPS implementation (cURL) options.
+    Data:='OpenSSL';
+    if RdbCurlVariant[GC_WinSSL].Checked then begin
+        Data:='WinSSL';
+    end;
+    RecordChoice(PreviousDataKey,'CURL Option',Data);
+
     // Line ending conversion options.
     Data:='';
     if RdbCRLF[GC_LFOnly].Checked then begin
@@ -1696,6 +2138,25 @@ begin
         Data:='Enabled';
     end;
     RecordChoice(PreviousDataKey,'Performance Tweaks FSCache',Data);
+    Data:='Disabled';
+    if RdbExtraOptions[GP_GCM].Checked then begin
+        Data:='Enabled';
+    end;
+    RecordChoice(PreviousDataKey,'Use Credential Manager',Data);
+    Data:='Disabled';
+    if RdbExtraOptions[GP_Symlinks].Checked then begin
+        Data:='Enabled';
+    end;
+    RecordChoice(PreviousDataKey,'Enable Symlinks',Data);
+
+    // Experimental options.
+#ifdef WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL
+    Data:='Disabled';
+    if RdbExperimentalOptions[GP_BuiltinDifftool].Checked then begin
+        Data:='Enabled';
+    end;
+    RecordChoice(PreviousDataKey,'Enable Builtin Difftool',Data);
+#endif
 
     Path:=ExpandConstant('{app}\etc\install-options.txt');
     if not SaveStringToFile(Path,ChosenOptions,False) then

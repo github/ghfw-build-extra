@@ -5,52 +5,6 @@ die () {
 	exit 1
 }
 
-render_release_notes () {
-	# Generate the ReleaseNotes.html file
-	test -f ReleaseNotes.html &&
-	test ReleaseNotes.html -nt ReleaseNotes.md &&
-	test ReleaseNotes.html -nt release.sh || {
-		test -x /usr/bin/markdown ||
-		export PATH="$PATH:$(readlink -f "$PWD"/..)/../../bin"
-
-		# Install markdown
-		type markdown ||
-		pacman -Sy --noconfirm markdown ||
-		die "Could not install markdown"
-
-		(homepage=https://git-for-windows.github.io/ &&
-		 contribute=$homepage#contribute &&
-		 wiki=https://github.com/git-for-windows/git/wiki &&
-		 faq=$wiki/FAQ &&
-		 mailinglist=mailto:git@vger.kernel.org &&
-		 links="$(printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-			'<div class="links">' \
-			'<ul>' \
-			'<li><a href="'$homepage'">homepage</a></li>' \
-			'<li><a href="'$faq'">faq</a></li>' \
-			'<li><a href="'$contribute'">contribute</a></li>' \
-			'<li><a href="'$contribute'">bugs</a></li>' \
-			'<li><a href="'$mailinglist'">questions</a></li>' \
-			'</ul>' \
-			'</div>')" &&
-		 printf '%s\n%s\n%s\n%s %s\n%s %s\n%s\n%s\n%s\n%s\n' \
-			'<!DOCTYPE html>' \
-			'<html>' \
-			'<head>' \
-			'<meta http-equiv="Content-Type" content="text/html;' \
-			'charset=UTF-8">' \
-			'<link rel="stylesheet"' \
-			' href="usr/share/git/ReleaseNotes.css">' \
-			'</head>' \
-			'<body class="details">' \
-			"$links" \
-			'<div class="content">'
-		 markdown ReleaseNotes.md ||
-		 die "Could not generate ReleaseNotes.html"
-		 printf '</div>\n</body>\n</html>\n') >ReleaseNotes.html
-	}
-}
-
 # change directory to the script's directory
 cd "$(dirname "$0")" ||
 die "Could not switch directory"
@@ -68,17 +22,31 @@ do
 	--skip-files)
 		skip_files=t
 		;;
-	--debug-wizard-page=*)
+	--window-title-version=*)
+		inno_defines="$(printf "%s\n%s" "$inno_defines" \
+			"#define WINDOW_TITLE_VERSION '${1#*=}'")"
+		;;
+	-d=*|--debug-wizard-page=*)
+		page="${1#*=}"
+		case "$page" in *Page);; *)page=${page}Page;; esac
 		test_installer=t
+		if ! grep "^ *$page:TWizardPage;$" install.iss >/dev/null
+		then
+			echo "Unknown page '$page'. Known pages:" >&2
+			sed -n 's/:TWizardPage;$//p' <install.iss >&2
+			exit 1
+		fi
 		inno_defines="$(printf "%s\n%s\n%s" "$inno_defines" \
-			"#define DEBUG_WIZARD_PAGE '${1#*=}'" \
+			"#define DEBUG_WIZARD_PAGE '$page'" \
 			"#define OUTPUT_TO_TEMP ''")"
 		skip_files=t
 		;;
-	-r|--render-release-notes)
-		render_release_notes &&
-		start ReleaseNotes.html
-		exit
+	--output=*)
+		output_directory="$(cygpath -m "${1#*=}")" ||
+		die "Directory inaccessible: '${1#*=}'"
+
+		inno_defines="$(printf "%s\n%s" "$inno_defines" \
+			"#define OUTPUT_DIRECTORY '$output_directory'")"
 		;;
 	*)
 		break
@@ -95,14 +63,15 @@ else
 fi
 
 test $# = 0 ||
-die "Usage: $0 [-f | --force] ( --debug-wizard-page=<page> | <version> )"
+die "Usage: $0 [-f | --force] [--output=<directory>] ( --debug-wizard-page=<page> | <version> )"
 
-case "$version" in
+displayver="$(echo "${version#prerelease-}" |
+	sed -e 's/\.[^0-9]*\.[^0-9]*\./\./g' \
+		-e 's/\.[^.0-9]*\./\./g' -e 's/\.rc/\./g')"
+case "$displayver" in
 [0-9]*) ;; # okay
-*) die "InnoSetup requires a version that begins with a digit";;
+*) die "InnoSetup requires a version that begins with a digit ($displayver)";;
 esac
-
-render_release_notes
 
 # Evaluate architecture
 ARCH="$(uname -m)"
@@ -119,6 +88,14 @@ x86_64)
 	;;
 esac
 
+echo "Generating release notes to be included in the installer ..."
+../render-release-notes.sh --css usr/share/git/ ||
+die "Could not generate release notes"
+
+echo "Compiling edit-git-bash.exe ..."
+make -C ../ edit-git-bash.exe ||
+die "Could not build edit-git-bash.exe"
+
 if test t = "$skip_files"
 then
 	LIST=
@@ -126,19 +103,71 @@ else
 	echo "Generating file list to be included in the installer ..."
 	LIST="$(ARCH=$ARCH BITNESS=$BITNESS \
 		PACKAGE_VERSIONS_FILE=package-versions.txt \
+		INCLUDE_GIT_UPDATE=1 \
 		sh ../make-file-list.sh)" ||
 	die "Could not generate file list"
 fi
 
 printf "; List of files\n%s\n%s\n%s\n%s\n%s\n" \
 	"Source: \"{#SourcePath}\\package-versions.txt\"; DestDir: {app}\\etc; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
-	"Source: \"{#SourcePath}\\usr\\share\\git\\ReleaseNotes.css\"; DestDir: {app}\\usr\\share\\git; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
+	"Source: \"{#SourcePath}\\..\\ReleaseNotes.css\"; DestDir: {app}\\usr\\share\\git; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
 	"Source: \"cmd\\git.exe\"; DestDir: {app}\\bin; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
 	"Source: \"mingw$BITNESS\\share\\git\\compat-bash.exe\"; DestName: bash.exe; DestDir: {app}\\bin; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
 	"Source: \"mingw$BITNESS\\share\\git\\compat-bash.exe\"; DestName: sh.exe; DestDir: {app}\\bin; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" \
 	"Source: \"{#SourcePath}\\..\\post-install.bat\"; DestName: post-install.bat; DestDir: {app}; Flags: replacesameversion" \
 >file-list.iss ||
 die "Could not write to file-list.iss"
+
+case "$LIST" in
+*/libexec/git-core/git-legacy-difftool*)
+	inno_defines="$(printf "%s\n%s" "$inno_defines" \
+		"#define WITH_EXPERIMENTAL_BUILTIN_DIFFTOOL 1")"
+	;;
+esac
+
+GITCONFIG_PATH="$(echo "$LIST" | grep "^mingw$BITNESS/etc/gitconfig\$")"
+printf '' >programdata-config.template
+test -z "$GITCONFIG_PATH" || {
+	cp "/$GITCONFIG_PATH" gitconfig.system &&
+	cp "/$GITCONFIG_PATH" programdata-config.template &&
+	keys="$(git config -f gitconfig.system -l --name-only)" &&
+	for key in $keys
+	do
+		case "$key" in
+		pack.packsizelimit)
+			# remove from both, will be configured by installer
+			git config -f programdata-config.template \
+				--unset "$key" &&
+			git config -f gitconfig.system --unset "$key" ||
+			break
+			;;
+		diff.astextplain.*|filter.lfs.*|http.sslcainfo)
+			# keep in the system-wide config
+			git config -f programdata-config.template \
+				--unset "$key" ||
+			break
+			;;
+		*)
+			# move to the ProgramData template
+			git config -f gitconfig.system --unset "$key" ||
+			break
+			;;
+		esac || break
+	done &&
+	sed -i '/^\[/{:1;$d;N;/^.[^[]*$/b;s/^.*\[/[/;b1}' gitconfig.system &&
+	sed -i '/^\[/{:1;$d;N;/^.[^[]*$/b;s/^.*\[/[/;b1}' \
+		programdata-config.template ||
+	die "Could not split gitconfig"
+	LIST="$(echo "$LIST" | grep -v "^$GITCONFIG_PATH\$")"
+}
+
+printf '%s%s%s\n%s\n' \
+	'Source: {#SourcePath}\gitconfig.system; DestName: gitconfig; ' \
+	  "DestDir: {app}\\mingw$BITNESS\\etc; Flags: replacesameversion; " \
+	  'AfterInstall: DeleteFromVirtualStore' \
+	'Source: {#SourcePath}\programdata-config.template; Flags: dontcopy' \
+	>>file-list.iss ||
+die "Could not append gitconfig to file list"
 
 test -z "$LIST" ||
 echo "$LIST" |
@@ -147,14 +176,9 @@ sed -e 's|/|\\|g' \
 	-e 's|^\(.*\)\\\([^\\]*\)$|Source: \1\\\2; DestDir: {app}\\\1; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore|' \
 	>> file-list.iss
 
-echo "Generating bindimage.txt"
-pacman -Ql mingw-w64-$ARCH-git |
-sed -n -e 's|^[^ ]* /\(.*\.exe\)$|\1|p' \
-	-e 's|^[^ ]* /\(.*\.dll\)$|\1|p' > bindimage.txt
-echo "Source: \"{#SourcePath}\\bindimage.txt\"; DestDir: {app}\\mingw$BITNESS\\share\git\bindimage.txt; Flags: replacesameversion; AfterInstall: DeleteFromVirtualStore" >> file-list.iss
-
-printf "%s\n%s%s" \
-	"#define APP_VERSION '$version'" \
+printf "%s\n%s\n%s%s" \
+	"#define APP_VERSION '$displayver'" \
+	"#define FILENAME_VERSION '$version'" \
 	"#define BITNESS '$BITNESS'" \
 	"$inno_defines" \
 	>config.iss

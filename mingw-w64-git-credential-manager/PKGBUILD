@@ -3,25 +3,30 @@
 _realname="git-credential-manager"
 pkgbase="mingw-w64-${_realname}"
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=1.2.2
+pkgver=1.12.0
 pkgrel=1
+_realver=$pkgver
+_realtag=$pkgver
 pkgdesc="Credential Manager for Git for Windows"
 arch=('any')
 project_url="https://github.com/Microsoft/Git-Credential-Manager-for-Windows"
-zip_url="${project_url}/releases/download/v${pkgver}/gcmw-${pkgver}.zip"
+zip_url="${project_url}/releases/download/v${_realtag}/gcmw-v${_realver}.zip"
+src_zip_url="${project_url}/archive/v${_realtag}.zip"
 license=('MIT')
 groups=('VCS')
 
-source=("${zip_url}")
+source=("${zip_url}" "$src_zip_url")
 
-sha256sums=('9ed352cb0bee38e7c89ee1c5ce29f01cf32b41998d2c21304fc4b65b57f6d929')
+sha256sums=('5776b58ec7cf2332cf86962a511a724e41e5ddd2148ce33a5e29b164deaa7d92'
+            '695e8a027ce69463adb9c0db211285c262c5c5e1f8ff32c9194d530a7af6a3b5')
 
 package() {
   builddir=build-${MINGW_CHOST}
   prefix="$pkgdir/${MINGW_PREFIX}"
+  srcdir2="${srcdir}/"
   install -d -m755 "${prefix}"/libexec/git-core
-  install -m755 $srcdir/*.{dll,exe} "${prefix}"/libexec/git-core
+  install -m755 "$srcdir2"/*.{dll,exe} "${prefix}"/libexec/git-core
   install -d -m755 "${prefix}"/doc/git-credential-manager
-  install -m644 $srcdir/{README.md,LICENSE.txt} \
+  install -m644 "$srcdir2"/{README.md,LICENSE.txt} \
     "${prefix}"/doc/git-credential-manager
 }

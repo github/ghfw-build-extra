@@ -49,19 +49,22 @@ int edit_git_bash(LPWSTR git_bash_path, LPWSTR new_command_line)
 	len = wcslen(new_command_line);
 	alloc = 2 * (len + 16);
 	buffer = calloc(alloc, 1);
+
 	if (!buffer)
 		return 1;
+
 	buffer[0] = (WCHAR) len;
 	memcpy(buffer + 1, new_command_line, 2 * len);
 
 	if (!(handle = BeginUpdateResource(git_bash_path, FALSE)))
 		return 2;
 
-        if (!UpdateResource(handle, RT_STRING, MAKEINTRESOURCE(1),
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	if (!UpdateResource(handle, RT_STRING, MAKEINTRESOURCE(1),
+			MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
 			buffer, alloc))
 		result = 3;
-        if (!EndUpdateResource(handle, FALSE))
+
+	if (!EndUpdateResource(handle, FALSE))
 		return 4;
 
 	return result;
@@ -73,7 +76,17 @@ int main(int argc, char **argv)
 	int wargc, result;
 	LPWSTR *wargv;
 
+#ifdef DEBUG
+	LPTSTR cmdLine = GetCommandLineW();
+	fwprintf(stderr, L"Command Line: %s\n", cmdLine);
+	
+	wargv = CommandLineToArgvW(cmdLine, &wargc);
+
+	for (int i = 1; i < wargc; ++i)
+		fwprintf(stderr, L"Arg %d: %s\n", i, wargv[i]);
+#else
 	wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
+#endif
 
 	if (wargc != 3) {
 		fwprintf(stderr, L"Usage: %s <path-to-exe> <new-commad-line>\n",
