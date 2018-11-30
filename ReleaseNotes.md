@@ -425,7 +425,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git v2.8.1](http://article.gmane.org/gmane.linux.kernel/2189878).
+* Comes with [Git v2.8.1](https://www.mail-archive.com/git@vger.kernel.org/msg89475.html).
 * The Git for Windows project updated its contributor guidelines to the [Contributor Covenant 1.4](https://github.com/git-for-windows/git/pull/661).
 
 ### Bug Fixes
@@ -437,7 +437,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git v2.8.0](http://article.gmane.org/gmane.linux.kernel/2185094).
+* Comes with [Git v2.8.0](https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1109179.html).
 * Comes with the [Git Credential Manager v1.2.2](https://github.com/Microsoft/Git-Credential-Manager-for-Windows/releases/tag/v1.2.2).
 * The FSCache feature (which was labeled experimental for quite some time) [is now enabled by default](https://github.com/git-for-windows/build-extra/pull/101).
 * Git is now [added to the `PATH` by default](https://github.com/git-for-windows/build-extra/pull/102) (previously, the default was for Git to be available only from Git Bash/CMD).
@@ -452,7 +452,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git 2.7.4](http://article.gmane.org/gmane.linux.kernel/2179363).
+* Comes with [Git 2.7.4](https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1102547.html).
 
 ### Bug Fixes
 
@@ -463,7 +463,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 ### New Features
 
 * Git for Windows [now ships with](https://github.com/git-for-windows/git/issues/466) the [Git Credential Manager for Windows](https://github.com/Microsoft/Git-Credential-Manager-for-Windows/).
-* Comes with [Git v2.7.3](http://article.gmane.org/gmane.linux.kernel/2174435).
+* Comes with [Git v2.7.3](https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1098591.html).
 
 ### Bug Fixes
 
@@ -478,7 +478,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 * Git for Windows' SDK version 1.0.2 [has been released](https://github.com/git-for-windows/build-extra/releases/tag/git-sdk-1.0.2).
 * The "list references" window of `gitk` [is now wider by default](https://github.com/git-for-windows/git/pull/620).
-* Comes with [Git 2.7.2](http://article.gmane.org/gmane.linux.kernel/2158401).
+* Comes with [Git 2.7.2](https://www.mail-archive.com/git@vger.kernel.org/msg85799.html).
 
 ### Bug Fixes
 
@@ -503,7 +503,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git 2.7.1](http://article.gmane.org/gmane.comp.version-control.git/285657).
+* Comes with [Git 2.7.1](https://www.mail-archive.com/git@vger.kernel.org/msg84497.html).
 
 ### Bug Fixes
 
@@ -533,7 +533,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git v2.7.0](http://article.gmane.org/gmane.linux.kernel/2118402).
+* Comes with [Git v2.7.0](https://www.mail-archive.com/git@vger.kernel.org/msg83161.html).
 
 ## Bug Fixes
 
@@ -543,7 +543,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git v2.6.4](http://article.gmane.org/gmane.linux.kernel/2103498).
+* Comes with [Git v2.6.4](https://www.mail-archive.com/git@vger.kernel.org/msg82023.html).
 * Also available as `.tar.bz2` packages (you need an MSYS2/Cygwin-compatible unpacker to recreate the symbolic links correctly).
 
 ## Bug Fixes
@@ -556,7 +556,7 @@ Git for windows v2.10.1(2) was a MinGit-only release (i.e. there was no Git for 
 
 ### New Features
 
-* Comes with [Git v2.6.3](http://article.gmane.org/gmane.comp.version-control.git/280947).
+* Comes with [Git v2.6.3](https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1014076.html).
 * [Enables the stack smasher to protect against buffer overflows](https://github.com/git-for-windows/git/issues/501).
 
 ### Bug Fixes
